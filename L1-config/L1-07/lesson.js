@@ -664,8 +664,11 @@ def get_checkpoint_conversion_mapping(model_type):
   codeNote: 'extract_weight_conversions_for_model —— 类名优先，model_type 兜底。',
   duration: 18000,
   build(root, tl) {
-    const wrap = U.el('div', { class: 'col gap12', style: 'width:100%;height:100%' });
+    const wrap = U.el('div', { class: 'col gap14', style: 'width:100%;height:100%' });
     root.appendChild(wrap);
+
+    const viz = U.el('div', { class: 'col gap12 vizgrow hstart' });
+    wrap.appendChild(viz);
 
     const tb = W.table([
       ['<span class="mono">dynamic_module_utils.py</span>', '字符串 → 模块 → 类',
@@ -675,7 +678,7 @@ def get_checkpoint_conversion_mapping(model_type):
       ['<span class="mono">conversion_mapping.py</span>', '磁盘名 → 内存名',
        '两张表；<span class="hl4">类名优先，model_type 兜底</span>'],
     ], { head: ['文件', '它回答的问题', '判据 / 策略'] });
-    wrap.appendChild(U.el('div', { class: 'card', cc: 0, style: 'padding:10px 12px;width:100%' }, [tb]));
+    viz.appendChild(U.el('div', { class: 'card', cc: 0, style: 'padding:10px 12px;width:100%' }, [tb]));
     const trs = Array.from(tb.querySelectorAll('tbody tr'));
 
     const fl = W.flow([
@@ -683,7 +686,7 @@ def get_checkpoint_conversion_mapping(model_type):
       { t: 'model_type', s: 'config.model_type', cc: 0 },
       { t: 'None', s: '没有专门规则', cc: 3 },
     ], { style: 'width:100%' });
-    wrap.appendChild(U.el('div', { class: 'col gap6', style: 'width:100%' }, [
+    viz.appendChild(U.el('div', { class: 'col gap6', style: 'width:100%' }, [
       U.el('div', { class: 'klabel', text: '权重名映射的查找顺序（glm5_next_text → glm5_next 走的就是第二条）' }), fl,
     ]));
 

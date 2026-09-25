@@ -42,7 +42,8 @@ def main(argv):
     problems = []
     with sync_playwright() as p:
         br = p.chromium.launch(executable_path=chrome,
-                               args=["--allow-file-access-from-files", "--no-sandbox"])
+                               args=["--allow-file-access-from-files", "--no-sandbox",
+                               "--disable-dev-shm-usage", "--disable-gpu"])
         pg = br.new_page(viewport={"width": 1440, "height": 900})
         errs, cerrs = [], []
         pg.on("pageerror", lambda e: errs.append(str(e)))

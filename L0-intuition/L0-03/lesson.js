@@ -402,6 +402,25 @@ const SCENES = [
       U.el('div', { class: 'card', cc: 3, style: 'padding:9px 11px' }, [chain]),
     ]));
 
+    /* 45 格条带：MLA 层彼此相隔 4 层，中间永远隔着 3 层 KDA */
+    const strip = U.el('div', { class: 'row gap3', style: 'width:100%' });
+    const scells = [];
+    for (let i = 0; i < M.layers; i++) {
+      const mla = (i % 4 === 3);
+      const e = U.el('div', {
+        style: 'flex:1 1 0;min-width:14px;height:30px;border-radius:6px;'
+             + 'border:1px solid ' + (mla ? 'var(--c1)' : 'rgba(150,180,255,.16)') + ';'
+             + 'background:' + (mla ? 'rgba(167,139,250,.22)' : 'rgba(150,180,255,.05)') + ';'
+             + 'transition:box-shadow .3s var(--ease-out),opacity .3s',
+        title: 'layer ' + i + ' → ' + (mla ? 'MLA（indexed_attention）' : 'KDA（linear_attention）'),
+      });
+      strip.appendChild(e); scells.push(e);
+    }
+    viz.appendChild(U.el('div', { class: 'col gap6', style: 'width:100%' }, [
+      U.el('div', { class: 'klabel', text: '11 个 MLA 层（紫色）彼此相隔 4 层 —— 中间永远隔着 3 层 KDA' }),
+      strip,
+    ]));
+
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);
 
@@ -415,9 +434,14 @@ const SCENES = [
     tl.at(7800, () => {
       chain.querySelectorAll('.chip')[4].style.boxShadow = '0 0 0 2px var(--bad)';
       chain.querySelectorAll('.chip')[0].style.boxShadow = '0 0 0 2px var(--ok)';
+      scells.forEach((c, i) => {
+        c.style.boxShadow = (i % 4 === 3) ? '0 0 0 2px var(--c1)' : 'none';
+        c.style.opacity = (i % 4 === 3) ? '1' : '.34';
+      });
       msg.innerHTML = '但这份结果只传<em>一层</em>：L3 的选择在 L4 就被重置成 <span class="hlbad">None</span>';
     });
     tl.at(11200, () => {
+      scells.forEach(c => { c.style.opacity = '1'; });
       msg.innerHTML = '所以实测（8 层孪生、freq=4）会直接抛：<span class="hlbad">Shared DSA layers require top-k indices from a previous full indexer layer.</span>';
     });
     tl.at(14200, () => {

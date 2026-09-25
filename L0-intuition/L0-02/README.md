@@ -109,7 +109,7 @@ DSA 层是 NoPE，所以它是 0；真正的头宽是 `qk_head_dim = 0 + 256 = 2
 
 - `mlp_layer_types`：`["dense"] * min(3, N) + ["sparse"] * (N - 3)` → `3 + 42`（**没有一行硬编码 42**）；
 - `layer_types`：`idx % 4 != 3` → `linear_attention`，其余 `indexed_attention` → `34 : 11`（展开见 L0-03）；
-- `indexer_types`:默认 45 个 `"full"`。
+- `indexer_types`：默认 45 个 `"full"`。
 - 边界（实测）：`num_hidden_layers=2` → `['dense', 'dense']` —— `[...] * (-1)` 得到空列表，不报错。
 
 ### 4. ★ `validate_architecture`：四道形状契约 + 一道 NoPE 断言
