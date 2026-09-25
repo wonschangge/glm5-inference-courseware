@@ -144,6 +144,7 @@ const SCENES = [
       ['parse_repr(…)', '反解 + DEFAULTS 兜底', "<span class='hl'>回填未出现的键</span>", '所以没有 DEFAULTS 就无法反解'],
     ], { head: ['调用', '差异', '结果', '为什么'] });
     mid.appendChild(U.el('div', { class: 'card', cc: 4, style: 'padding:10px 12px' }, [tb]));
+    wrap.appendChild(mid);
 
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);
@@ -219,6 +220,7 @@ const SCENES = [
     cmp.appendChild(W.card({ cc: 2, title: '为什么两级分隔符？', style: 'flex:1 1 0',
       sub: '分隔符影响可读性与长度。先试净拼（lr），被别人占了才退到 l_r。' }));
     mid.appendChild(cmp);
+    wrap.appendChild(mid);
 
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);
@@ -285,6 +287,7 @@ const SCENES = [
       ['hp_a4_b-3', 'ValueError', '—', "could not convert string to float: ''"],
     ], { head: ['名字', 'parse_repr 结果', '类型', '说明'] });
     mid.appendChild(U.el('div', { class: 'card', cc: 3, style: 'padding:10px 12px' }, [tb]));
+    wrap.appendChild(mid);
 
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);
