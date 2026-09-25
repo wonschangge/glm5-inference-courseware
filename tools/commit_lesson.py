@@ -68,6 +68,13 @@ def main(argv):
     do_render = "--no-render" not in argv
     dry = "--dry-run" in argv
     body = argv[argv.index("--body") + 1] if "--body" in argv else ""
+    if "--from-plan" in argv and not body:
+        # 用 tools/plan.py 里的「讲解要点」自动组稿，保证提交信息与计划一致，
+        # 也避免批量提交时写出空泛的信息。
+        pts = L["points"]
+        body = "\n".join(("- " + p) for p in pts)
+        body += ("\n\n覆盖的源文件：" + ", ".join(plan.expand_files(L["files"], C.load_universe()[0])[:3])
+                 + (" 等" if len(L["files"]) > 3 else ""))
 
     # ---- 四文件齐备 ----
     miss = [f for f in C.LESSON_FILES if not os.path.isfile(os.path.join(C.ROOT, d, f))]
