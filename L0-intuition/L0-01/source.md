@@ -169,6 +169,36 @@ Glm5NextTextConfig() 默认值
   **这是相对上一代模型最关键的改动**。
 - 出口是 `norm(hc_head(hidden_states))`：`hc_head` 先把 4 条流收成 1 条，再归一化。
   顺序不能反 —— 归一化是逐流的，收拢必须在前。
+- **★ 实测订正**：`Glm5NextTextHyperHead` 并不是一个学习出来的加权求和。
+  它的整个实现就是一行 `hidden_streams.mean(dim=2)`，**参数量为 0**，
+  连 docstring 都写明了「Unlike DeepSeek-V4, this is an unweighted mean」。
+  这一点很容易凭直觉写错（本课件的第一版就写成了「学习一组混合权重」，
+  后来跑出来才发现是等权平均）—— 见下面对该类的逐字引用。
+
+---
+
+## 六之二、★ 证据：`hc_head` 到底是什么
+
+上面说「`hc_head` 把 4 条流收成 1 条」。收成的方式值得单独看一眼 ——
+因为**它和直觉相反**：
+
+<!-- src: models/glm5_next/modeling_glm5_next.py -->
+```python
+class Glm5NextTextHyperHead(nn.Module):
+    """Final GLM-5.3-Flash HC-stream collapse. Unlike DeepSeek-V4, this is an unweighted mean."""
+
+    def forward(self, hidden_streams: torch.Tensor) -> torch.Tensor:
+        return hidden_streams.mean(dim=2)
+```
+
+**读法**：
+- 整个类**没有任何子模块、没有任何 Parameter**。实例化后 `sum(p.numel() for p in h.parameters()) == 0`。
+- `mean(dim=2)` 就是 4 条流的**等权平均**。实测 `torch.allclose(h(x), x.mean(dim=2))` 为 `True`。
+- docstring 里那句 `Unlike DeepSeek-V4, this is an unweighted mean` 是作者留下的一手证据：
+  上一代做法是带权重的，这一代**主动去掉了权重**。
+- 为什么这是个好例子：它说明「看起来该有参数的地方可能一个参数都没有」。
+  本课件第一版在这里写的是「学习一组混合权重，把 4 条流加权求和」——
+  那是**凭直觉推断**，跑一遍就发现是错的。这正是本项目坚持「凡推断必实测」的原因。
 
 ---
 
@@ -261,7 +291,7 @@ Glm5NextTextConfig() 默认值
         │      hidden_states = mHC_residual(sub_layer(norm(hidden_states)))
         ▼
   hidden_states (batch, seq, 4, 4096)
-        │  hc_head   ← 4 条流收成 1 条
+        │  hc_head   ← 4 条流等权平均（mean(dim=2)，0 参数）
         │  norm
         ▼
   last_hidden_state (batch, seq, 4096)

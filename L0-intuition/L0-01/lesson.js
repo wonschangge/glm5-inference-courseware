@@ -570,7 +570,8 @@ const SCENES = [
 {
   kicker: '阶段 ⑥ · 出口',
   title: '收拢：<span class="hl-a">hc_head</span> 把 4 条流合成 1 条',
-  sub: 'norm(hc_head(hidden_states)) —— 顺序不能反：归一化是逐流的，收拢必须在前。',
+  sub: 'norm(hc_head(hidden_states)) —— 顺序不能反：归一化是逐流的，收拢必须在前。'
+     + '而这一步本身出乎意料地简单：等权平均，0 个参数。',
   caption: '到这里主干就结束了。lm_head 与采样在 Glm5NextForConditionalGeneration 里。',
   lang: 'python',
   codeStart: 1511,
@@ -621,7 +622,10 @@ const SCENES = [
 
     outBar.style.opacity = '0'; outBar.style.transform = 'scale(.9)';
     msg.innerHTML = '<span class="cm">// 45 层跑完，手上还是 4 条流</span>';
-    tl.at(3000, () => { msg.innerHTML = '<em>hc_head</em> 学习一组混合权重，把 4 条流加权求和'; });
+    tl.at(3000, () => {
+      msg.innerHTML = '<em>hc_head</em> 做的是 <span class="hl3">等权平均</span> '
+        + '<span class="cm">// hidden_streams.mean(dim=2)，0 个参数</span>';
+    });
     tl.at(6200, () => {
       inBars.forEach((b, s) => { b.style.opacity = '.35'; b.style.transform = 'translateX(10px)'; });
       outBar.style.opacity = '1'; outBar.style.transform = 'none';
@@ -664,7 +668,7 @@ const SCENES = [
       { n: '②', t: '嵌入', c: 4, d: 'embed_tokens → (b, s, 4096)' },
       { n: '③', t: '展开', c: 2, d: 'hc_mult=4 → (b, s, 4, 4096)' },
       { n: '④', t: '45 层', c: 1, d: '按 layer_types 排班' },
-      { n: '⑤', t: '收拢', c: 5, d: 'hc_head + norm → (b, s, 4096)' },
+      { n: '⑤', t: '收拢', c: 5, d: 'hc_head 等权平均 + norm → (b, s, 4096)' },
       { n: '⑥', t: '采样', c: 3, d: 'lm_head → logits → next_token' },
     ];
     const row = U.el('div', { class: 'row gap8', style: 'width:100%;align-items:stretch' });

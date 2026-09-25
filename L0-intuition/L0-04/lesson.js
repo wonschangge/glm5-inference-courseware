@@ -359,30 +359,12 @@ const SCENES = [
     wrap.appendChild(bar);
     bar.innerHTML = '<span class="cm">// hidden_states = experts(...) + shared_experts(residuals)</span>';
 
-    /* 数据包：两条路径都汇到「+」。注意 FLOW.resize() 把 canvas 的 CSS 盒子与
-       位图都按**屏幕像素**设尺寸，而路径用的是**舞台坐标** —— 乘上缩放比后
-       canvas 会比 #visual 宽。这里按「盒子 = 舞台像素、位图 = dpr x 舞台像素」
-       重设一次，既对齐又不溢出（引擎文件不可改）。 */
-    const pinCanvas = () => {
-      const cv = FLOW.cv; if (!cv) return;
-      const host = U.q('#visual'), s = U.scale || 1;
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      const r = host.getBoundingClientRect();
-      const w = r.width / s, h = r.height / s;
-      cv.style.width = w.toFixed(1) + 'px';
-      cv.style.height = h.toFixed(1) + 'px';
-      cv.width = Math.round(w * dpr);
-      cv.height = Math.round(h * dpr);
-      FLOW.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      FLOW.W = w; FLOW.H = h;
-    };
+    /* 数据包：两条路径都汇到「+」。
+       canvas 的尺寸由引擎的 FLOW.resize() 按**舞台坐标**统一处理
+       （见 engine.js 里关于「屏幕像素 vs 舞台像素」的注释），
+       本课不需要再自己钉一遍。 */
     try {
       FLOW.attach(U.q('#visual'));
-      pinCanvas();
-      if (!window.__flowPinL004) {
-        window.__flowPinL004 = true;
-        window.addEventListener('resize', pinCanvas);
-      }
       FLOW.pathBetween('routed', midA, right);
       FLOW.pathBetween('shared', midB, right);
       FLOW.rail('routed', 1200, '56,189,248');
@@ -539,12 +521,12 @@ const SCENES = [
     for (let g = 0; g < 4; g++) {
       const col = U.el('div', { class: 'col gap6', style: 'flex:1 1 0;min-width:0' });
       col.appendChild(U.el('div', { class: 'chip c1', style: 'align-self:flex-start', text: '组 ' + g + ' · 72 个' }));
-      const bx = U.el('div', { style: 'display:grid;grid-template-columns:repeat(6,1fr);gap:4px;width:100%' });
+      const bx = U.el('div', { style: 'display:grid;grid-template-columns:repeat(6,1fr);gap:5px;width:100%' });
       const cells = [];
       for (let i = 0; i < 12; i++) {
         const e = U.el('div', {
           title: '组 ' + g + ' 的专家（示意）',
-          style: 'height:20px;border-radius:5px;min-width:0;border:1px solid rgba(150,180,255,.16);'
+          style: 'height:30px;border-radius:5px;min-width:0;border:1px solid rgba(150,180,255,.16);'
                + 'background:rgba(150,180,255,.07);'
                + 'transition:background .45s cubic-bezier(.16,1,.3,1),border-color .45s,opacity .45s,transform .45s' });
         bx.appendChild(e); cells.push(e);
@@ -566,6 +548,14 @@ const SCENES = [
       sub: '<span class="mono" style="font-size:10.5px">torch.topk(scores_for_choice, k=self.top_k)</span>' });
     bottom.appendChild(b1); bottom.appendChild(b2); bottom.appendChild(b3);
     viz.appendChild(bottom);
+
+    const why = U.el('div', { class: 'row gap12', style: 'width:100%;align-items:stretch' });
+    const w1 = W.card({ cc: 1, title: '动机 ① 通信', style: 'flex:1',
+      sub: '288 选 8 是全对全比较；专家并行下每一轮路由都是一次 all-to-all。先在组粒度收敛范围，通信模式才可预测。' });
+    const w2 = W.card({ cc: 5, title: '动机 ② 负载', style: 'flex:1',
+      sub: '只按分数选，容易出现「8 个都落在同一台设备」或「每台都碰一点」的抖动 —— 组相当于给路由加的配额。' });
+    why.appendChild(w1); why.appendChild(w2);
+    viz.appendChild(why);
 
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);
@@ -606,6 +596,10 @@ const SCENES = [
     tl.at(15800, () => {
       b3.classList.remove('ac');
       msg.innerHTML = '<span class="cm">// 默认 n_group=1 / topk_group=1：只有一组，整组必然入选 —— 这段是空操作</span>';
+    });
+    tl.at(17800, () => {
+      w1.classList.add('ac'); w2.classList.add('ac');
+      msg.innerHTML = '分组的代价是路由自由度变小，换来的是<em>可预测的通信</em>与<em>更稳的负载</em>';
     });
   },
 },
@@ -668,6 +662,17 @@ const SCENES = [
     [s1, s2, s3].forEach(o => row.appendChild(o.c));
     viz.appendChild(row);
 
+    const why = U.el('div', { class: 'row gap12', style: 'width:100%;align-items:stretch' });
+    const wA = W.card({ cc: 3, title: '不补回来会怎样', style: 'flex:1',
+      sub: 'sigmoid 的分数在 0.5 附近，top-8 又只留下一小部分；不放大，这一路的输出相对残差流'
+         + '就几乎可以忽略，42 层稀疏层等于白加。' });
+    const wB = W.card({ cc: 4, title: '怎么检查它生效了', style: 'flex:1',
+      sub: '把 <span class="mono" style="font-size:10.5px">topk_weights</span> 沿最后一维求和：'
+         + '开了 norm_topk_prob 时应恒等于 <span class="mono" style="font-size:10.5px">routed_scaling_factor</span>。'
+         + '实测 8 专家 / top-2 的权重和正好 2.500。' });
+    why.appendChild(wA); why.appendChild(wB);
+    viz.appendChild(why);
+
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);
 
@@ -695,7 +700,12 @@ const SCENES = [
       msg.innerHTML = '为什么要补回来：这一路的输出要与<em>残差流</em>直接相加，整体偏小就等于这 42 层几乎没贡献';
     });
     tl.at(15800, () => {
+      wA.classList.add('ac');
       msg.innerHTML = '<span class="cm">// 检查这一行有没有生效：把 topk_weights 求和，应当等于 2.5</span>';
+    });
+    tl.at(17600, () => {
+      wA.classList.remove('ac'); wB.classList.add('ac');
+      msg.innerHTML = '实测权重和 <em>2.500</em> —— 归一化 + 缩放这两步都生效了，这是最快的自检';
     });
   },
 },

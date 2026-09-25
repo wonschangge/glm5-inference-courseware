@@ -275,11 +275,20 @@ const FLOW = {
     const r = this.host.getBoundingClientRect();
     const s = U.scale || 1;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
-    this.cv.width = Math.round(w * dpr); this.cv.height = Math.round(h * dpr);
-    this.cv.style.width = w + 'px'; this.cv.style.height = h + 'px';
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    this.W = w / s; this.H = h / s;   /* 舞台坐标 */
+    /* ★ 单位陷阱：getBoundingClientRect() 给的是**屏幕像素**，而 #stage 带着
+       transform:scale(s)。canvas 的 CSS 盒子写在舞台内部，所以要除以 s 才是
+       它在舞台坐标里的尺寸；位图则要按 dpr*s 放大才够清晰。
+       早期版本把屏幕像素直接当舞台像素用，缩放比不为 1 时 canvas 会比
+       #visual 宽出 s 倍，数据包画到可视区外面去。 */
+    const W = Math.max(1, r.width / s);
+    const H = Math.max(1, r.height / s);
+    const k = dpr * s;
+    this.cv.width = Math.round(W * k);
+    this.cv.height = Math.round(H * k);
+    this.cv.style.width = W + 'px';
+    this.cv.style.height = H + 'px';
+    this.ctx.setTransform(k, 0, 0, k, 0, 0);
+    this.W = W; this.H = H;           /* 舞台坐标，与 FLOW.path 的坐标系一致 */
   },
   clear() { this.paths = {}; this.travels = []; if (this.ctx) this.ctx.clearRect(0, 0, this.W, this.H); },
   /* 登记一条路径：pts = 舞台坐标 [[x,y],...] */
