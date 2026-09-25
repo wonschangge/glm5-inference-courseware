@@ -145,7 +145,7 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="hmeta">
 <span class="pill acc">覆盖域是实测的：231 / 328 个推理闭包文件</span>
 <span class="pill">闭包外 97 个（36 个无关模型族，已声明排除）</span>
-<span class="pill ok">已完成 1 / 70 课</span>
+<span class="pill ok">已完成 27 / 70 课</span>
 <a class="pill acc" href="TODOLIST.md">计划与覆盖度矩阵</a>
 <a class="pill acc" href="STYLE.md">制作规范</a>
 </div>
@@ -189,8 +189,8 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 </div>
 <a class="lgo" href="L0-intuition/L0-01/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc0 planned" data-l="L0" data-s="l0-02 配置即架构：从 config 读出全部形状 models/glm5_next/configuration_glm5_next.py">
-<div class="lchd"><span class="lid">L0-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc0" data-l="L0" data-s="l0-02 配置即架构：从 config 读出全部形状 models/glm5_next/configuration_glm5_next.py">
+<div class="lchd"><span class="lid">L0-02</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>配置即架构：从 config 读出全部形状</h3>
 <ul class="lpts">
 <li>hidden=4096 / 64 头 / qk_nope=256 / v=256 如何拼出注意力形状</li>
@@ -200,10 +200,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">configuration_glm5_next.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L0-intuition/L0-02/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc0 planned" data-l="L0" data-s="l0-03 层类型排布：34 层 kda + 11 层 mla models/glm5_next/configuration_glm5_next.py">
-<div class="lchd"><span class="lid">L0-03</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc0" data-l="L0" data-s="l0-03 层类型排布：34 层 kda + 11 层 mla models/glm5_next/configuration_glm5_next.py">
+<div class="lchd"><span class="lid">L0-03</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>层类型排布：34 层 KDA + 11 层 MLA</h3>
 <ul class="lpts">
 <li>layer_types 的生成规律 idx % 4 != 3 → linear_attention</li>
@@ -213,10 +213,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">configuration_glm5_next.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L0-intuition/L0-03/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc0 planned" data-l="L0" data-s="l0-04 moe 经济学：288 选 8 models/glm5_next/modeling_glm5_next.py">
-<div class="lchd"><span class="lid">L0-04</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc0" data-l="L0" data-s="l0-04 moe 经济学：288 选 8 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L0-04</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>MoE 经济学：288 选 8</h3>
 <ul class="lpts">
 <li>n_routed_experts=288, top-k=8, +1 共享专家 → 激活比约 3%</li>
@@ -226,10 +226,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">modeling_glm5_next.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L0-intuition/L0-04/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc0 planned" data-l="L0" data-s="l0-05 mhc：4 条残差流 models/glm5_next/modeling_glm5_next.py">
-<div class="lchd"><span class="lid">L0-05</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<article class="lcard cc0" data-l="L0" data-s="l0-05 mhc：4 条残差流 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L0-05</span><span class="lprio p1">P1</span><span class="lok">已交付</span></div>
 <h3>mHC：4 条残差流</h3>
 <ul class="lpts">
 <li>hc_mult=4 —— 残差不是一条而是一束</li>
@@ -239,10 +239,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">modeling_glm5_next.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L0-intuition/L0-05/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc1 planned" data-l="L1" data-s="l1-01 pretrainedconfig：配置对象的公共契约 configuration_utils.py">
-<div class="lchd"><span class="lid">L1-01</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc1" data-l="L1" data-s="l1-01 pretrainedconfig：配置对象的公共契约 configuration_utils.py">
+<div class="lchd"><span class="lid">L1-01</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>PreTrainedConfig：配置对象的公共契约</h3>
 <ul class="lpts">
 <li>from_pretrained / to_dict / to_json_string 的完整路径</li>
@@ -252,10 +252,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">configuration_utils.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L1-config/L1-01/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc1 planned" data-l="L1" data-s="l1-02 glm5nexttextconfig 逐字段精读 models/glm5_next/configuration_glm5_next.py">
-<div class="lchd"><span class="lid">L1-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc1" data-l="L1" data-s="l1-02 glm5nexttextconfig 逐字段精读 models/glm5_next/configuration_glm5_next.py">
+<div class="lchd"><span class="lid">L1-02</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>Glm5NextTextConfig 逐字段精读</h3>
 <ul class="lpts">
 <li>每个字段属于哪一组：注意力 / MoE / KDA / DSA / mHC</li>
@@ -265,10 +265,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">configuration_glm5_next.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L1-config/L1-02/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc1 planned" data-l="L1" data-s="l1-03 视觉配置与顶层嵌套 models/glm5_next/configuration_glm5_next.py">
-<div class="lchd"><span class="lid">L1-03</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<article class="lcard cc1" data-l="L1" data-s="l1-03 视觉配置与顶层嵌套 models/glm5_next/configuration_glm5_next.py">
+<div class="lchd"><span class="lid">L1-03</span><span class="lprio p1">P1</span><span class="lok">已交付</span></div>
 <h3>视觉配置与顶层嵌套</h3>
 <ul class="lpts">
 <li>Glm5NextVisionConfig：depth=24, patch=14, merge=2 → 每 token 覆盖 28 像素</li>
@@ -278,10 +278,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">configuration_glm5_next.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L1-config/L1-03/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc1 planned" data-l="L1" data-s="l1-04 配置的序列化、继承与文档生成 utils/hp_naming.py utils/doc.py utils/auto_docstring.py utils/type_validators.py">
-<div class="lchd"><span class="lid">L1-04</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<article class="lcard cc1" data-l="L1" data-s="l1-04 配置的序列化、继承与文档生成 utils/hp_naming.py utils/doc.py utils/auto_docstring.py utils/type_validators.py">
+<div class="lchd"><span class="lid">L1-04</span><span class="lprio p1">P1</span><span class="lok">已交付</span></div>
 <h3>配置的序列化、继承与文档生成</h3>
 <ul class="lpts">
 <li>hp_naming 如何把自定义类名映射回上游名字</li>
@@ -291,10 +291,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">4 个源文件</span>
 <code class="inl">hp_naming.py +3</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L1-config/L1-04/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc1 planned" data-l="L1" data-s="l1-05 automodel 分派：字符串如何找到类 models/auto/__init__.py models/auto/configuration_auto.py models/auto/auto_factory.py models/auto/auto_mappings.py">
-<div class="lchd"><span class="lid">L1-05</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc1" data-l="L1" data-s="l1-05 automodel 分派：字符串如何找到类 models/auto/__init__.py models/auto/configuration_auto.py models/auto/auto_factory.py models/auto/auto_mappings.py">
+<div class="lchd"><span class="lid">L1-05</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>AutoModel 分派：字符串如何找到类</h3>
 <ul class="lpts">
 <li>CONFIG_MAPPING 的惰性注册表</li>
@@ -304,10 +304,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">4 个源文件</span>
 <code class="inl">__init__.py +3</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L1-config/L1-05/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc1 planned" data-l="L1" data-s="l1-06 其余四张自动注册表 models/auto/modeling_auto.py models/auto/tokenization_auto.py models/auto/image_processing_auto.py models/auto/video_processing_auto.py models/auto/feature_extraction_auto.py models/auto/processing_auto.py">
-<div class="lchd"><span class="lid">L1-06</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<article class="lcard cc1" data-l="L1" data-s="l1-06 其余四张自动注册表 models/auto/modeling_auto.py models/auto/tokenization_auto.py models/auto/image_processing_auto.py models/auto/video_processing_auto.py models/auto/feature_extraction_auto.py models/auto/processing_auto.py">
+<div class="lchd"><span class="lid">L1-06</span><span class="lprio p1">P1</span><span class="lok">已交付</span></div>
 <h3>其余四张自动注册表</h3>
 <ul class="lpts">
 <li>模型/分词器/图像/视频/处理器五种 Auto 类的对称结构</li>
@@ -317,10 +317,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">6 个源文件</span>
 <code class="inl">modeling_auto.py +5</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L1-config/L1-06/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc1 planned" data-l="L1" data-s="l1-07 动态模块、类型契约与权重名映射表 dynamic_module_utils.py _typing.py conversion_mapping.py">
-<div class="lchd"><span class="lid">L1-07</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<article class="lcard cc1" data-l="L1" data-s="l1-07 动态模块、类型契约与权重名映射表 dynamic_module_utils.py _typing.py conversion_mapping.py">
+<div class="lchd"><span class="lid">L1-07</span><span class="lprio p1">P1</span><span class="lok">已交付</span></div>
 <h3>动态模块、类型契约与权重名映射表</h3>
 <ul class="lpts">
 <li>trust_remote_code 路径下的动态导入</li>
@@ -330,10 +330,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">3 个源文件</span>
 <code class="inl">dynamic_module_utils.py +2</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L1-config/L1-07/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc2 planned" data-l="L2" data-s="l2-01 分词器公共契约：慢与快共享的那一层 tokenization_utils_base.py">
-<div class="lchd"><span class="lid">L2-01</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc2" data-l="L2" data-s="l2-01 分词器公共契约：慢与快共享的那一层 tokenization_utils_base.py">
+<div class="lchd"><span class="lid">L2-01</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>分词器公共契约：慢与快共享的那一层</h3>
 <ul class="lpts">
 <li>SpecialTokensMixin 与 token 属性体系</li>
@@ -343,10 +343,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">tokenization_utils_base.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L2-input/L2-01/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc2 planned" data-l="L2" data-s="l2-02 快分词器、纯 python 分词器与慢→快转换 tokenization_utils_tokenizers.py tokenization_python.py convert_slow_tokenizer.py">
-<div class="lchd"><span class="lid">L2-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc2" data-l="L2" data-s="l2-02 快分词器、纯 python 分词器与慢→快转换 tokenization_utils_tokenizers.py tokenization_python.py convert_slow_tokenizer.py">
+<div class="lchd"><span class="lid">L2-02</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>快分词器、纯 Python 分词器与慢→快转换</h3>
 <ul class="lpts">
 <li>tokenizers 库后端的批量编码</li>
@@ -356,10 +356,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">3 个源文件</span>
 <code class="inl">tokenization_utils_tokenizers.py +2</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L2-input/L2-02/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc2 planned" data-l="L2" data-s="l2-03 sentencepiece 分词器 tokenization_utils_sentencepiece.py">
-<div class="lchd"><span class="lid">L2-03</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<article class="lcard cc2" data-l="L2" data-s="l2-03 sentencepiece 分词器 tokenization_utils_sentencepiece.py">
+<div class="lchd"><span class="lid">L2-03</span><span class="lprio p1">P1</span><span class="lok">已交付</span></div>
 <h3>SentencePiece 分词器</h3>
 <ul class="lpts">
 <li>unigram / BPE 两种模型的加载</li>
@@ -369,10 +369,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">tokenization_utils_sentencepiece.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L2-input/L2-03/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc2 planned" data-l="L2" data-s="l2-04 图像处理基座：尺寸、归一化与后端 image_processing_base.py image_processing_utils.py image_processing_backends.py">
-<div class="lchd"><span class="lid">L2-04</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc2" data-l="L2" data-s="l2-04 图像处理基座：尺寸、归一化与后端 image_processing_base.py image_processing_utils.py image_processing_backends.py">
+<div class="lchd"><span class="lid">L2-04</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>图像处理基座：尺寸、归一化与后端</h3>
 <ul class="lpts">
 <li>BaseImageProcessor 的 preprocess 契约</li>
@@ -382,10 +382,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">3 个源文件</span>
 <code class="inl">image_processing_base.py +2</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L2-input/L2-04/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc2 planned" data-l="L2" data-s="l2-05 图像变换、视频与通用视觉工具 image_transforms.py image_utils.py video_processing_utils.py video_utils.py vision_utils.py audio_utils.py">
-<div class="lchd"><span class="lid">L2-05</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc2" data-l="L2" data-s="l2-05 图像变换、视频与通用视觉工具 image_transforms.py image_utils.py video_processing_utils.py video_utils.py vision_utils.py audio_utils.py">
+<div class="lchd"><span class="lid">L2-05</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>图像变换、视频与通用视觉工具</h3>
 <ul class="lpts">
 <li>resize / center_crop / normalize 的张量级实现</li>
@@ -395,10 +395,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">6 个源文件</span>
 <code class="inl">image_transforms.py +5</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L2-input/L2-05/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc2 planned" data-l="L2" data-s="l2-06 多模态处理器装配 processing_utils.py models/glm5_next/processing_glm5_next.py models/glm5_next/image_processing_glm5_next.py models/glm5_next/image_processing_pil_glm5_next.py models/glm5_next/video_processing_glm5_next.py feature_extraction_utils.py">
-<div class="lchd"><span class="lid">L2-06</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc2" data-l="L2" data-s="l2-06 多模态处理器装配 processing_utils.py models/glm5_next/processing_glm5_next.py models/glm5_next/image_processing_glm5_next.py models/glm5_next/image_processing_pil_glm5_next.py models/glm5_next/video_processing_glm5_next.py feature_extraction_utils.py">
+<div class="lchd"><span class="lid">L2-06</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>多模态处理器装配</h3>
 <ul class="lpts">
 <li>ProcessorMixin 如何把 tokenizer + image/video processor 拼起来</li>
@@ -408,11 +408,11 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">6 个源文件</span>
 <code class="inl">processing_utils.py +5</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L2-input/L2-06/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc2 planned" data-l="L2" data-s="l2-07 视觉塔：从 336x336 像素到 27 个 token models/glm5_next/modeling_glm5_next.py backbone_utils.py utils/backbone_utils.py">
-<div class="lchd"><span class="lid">L2-07</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
-<h3>视觉塔：从 336x336 像素到 27 个 token</h3>
+<article class="lcard cc2" data-l="L2" data-s="l2-07 视觉塔：从 336x336 像素到 144 个 token models/glm5_next/modeling_glm5_next.py backbone_utils.py utils/backbone_utils.py">
+<div class="lchd"><span class="lid">L2-07</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
+<h3>视觉塔：从 336x336 像素到 144 个 token</h3>
 <ul class="lpts">
 <li>patch embed 的卷积等价形式</li>
 <li>轴向 RoPE：height/width 两套频率的重组</li>
@@ -421,10 +421,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">3 个源文件</span>
 <code class="inl">modeling_glm5_next.py +2</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L2-input/L2-07/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc3 planned" data-l="L3" data-s="l3-01 三种 rmsnorm models/glm5_next/modeling_glm5_next.py pytorch_utils.py">
-<div class="lchd"><span class="lid">L3-01</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc3" data-l="L3" data-s="l3-01 三种 rmsnorm models/glm5_next/modeling_glm5_next.py pytorch_utils.py">
+<div class="lchd"><span class="lid">L3-01</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>三种 RMSNorm</h3>
 <ul class="lpts">
 <li>Glm5NextTextRMSNorm 与 Unweighted 的差别</li>
@@ -434,10 +434,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">2 个源文件</span>
 <code class="inl">modeling_glm5_next.py +1</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L3-backbone/L3-01/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc3 planned" data-l="L3" data-s="l3-02 mlp 与 swiglu 截断 models/glm5_next/modeling_glm5_next.py activations.py">
-<div class="lchd"><span class="lid">L3-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc3" data-l="L3" data-s="l3-02 mlp 与 swiglu 截断 models/glm5_next/modeling_glm5_next.py activations.py">
+<div class="lchd"><span class="lid">L3-02</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>MLP 与 SwiGLU 截断</h3>
 <ul class="lpts">
 <li>gate/up/down 三投影的 SwiGLU 结构</li>
@@ -447,10 +447,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">2 个源文件</span>
 <code class="inl">modeling_glm5_next.py +1</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L3-backbone/L3-02/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc3 planned" data-l="L3" data-s="l3-03 路由器：288 个分数如何变成 8 条路径 models/glm5_next/modeling_glm5_next.py">
-<div class="lchd"><span class="lid">L3-03</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc3" data-l="L3" data-s="l3-03 路由器：288 个分数如何变成 8 条路径 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L3-03</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>路由器：288 个分数如何变成 8 条路径</h3>
 <ul class="lpts">
 <li>gate 线性层 + softmax 的完整流程</li>
@@ -460,10 +460,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">modeling_glm5_next.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L3-backbone/L3-03/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc3 planned" data-l="L3" data-s="l3-04 专家层与 grouped gemm models/glm5_next/modeling_glm5_next.py">
-<div class="lchd"><span class="lid">L3-04</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc3" data-l="L3" data-s="l3-04 专家层与 grouped gemm models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L3-04</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>专家层与 grouped GEMM</h3>
 <ul class="lpts">
 <li>gate_up_proj 合并打包的存储布局</li>
@@ -473,10 +473,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">modeling_glm5_next.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L3-backbone/L3-04/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc3 planned" data-l="L3" data-s="l3-05 moe 装配与共享专家 models/glm5_next/modeling_glm5_next.py">
-<div class="lchd"><span class="lid">L3-05</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc3" data-l="L3" data-s="l3-05 moe 装配与共享专家 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L3-05</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>MoE 装配与共享专家</h3>
 <ul class="lpts">
 <li>Glm5NextTextMoE 的前向：共享专家与路由专家的合并方式</li>
@@ -486,10 +486,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">modeling_glm5_next.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L3-backbone/L3-05/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc3 planned" data-l="L3" data-s="l3-06 ★ mhc：流形约束超连接 models/glm5_next/modeling_glm5_next.py">
-<div class="lchd"><span class="lid">L3-06</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc3" data-l="L3" data-s="l3-06 ★ mhc：流形约束超连接 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L3-06</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>★ mHC：流形约束超连接</h3>
 <ul class="lpts">
 <li>4 条残差流的读取、混合、写回三步</li>
@@ -499,10 +499,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">modeling_glm5_next.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L3-backbone/L3-06/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc3 planned" data-l="L3" data-s="l3-07 遗忘门与门控范数 models/glm5_next/modeling_glm5_next.py">
-<div class="lchd"><span class="lid">L3-07</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc3" data-l="L3" data-s="l3-07 遗忘门与门控范数 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L3-07</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>遗忘门与门控范数</h3>
 <ul class="lpts">
 <li>ForgetGate 的线性投影 + 下界截断</li>
@@ -512,10 +512,10 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">1 个源文件</span>
 <code class="inl">modeling_glm5_next.py</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L3-backbone/L3-07/index.html">打开课件 →</a>
 </article>
-<article class="lcard cc3 planned" data-l="L3" data-s="l3-08 解码层装配：三个子块的顺序 models/glm5_next/modeling_glm5_next.py modeling_layers.py modeling_outputs.py">
-<div class="lchd"><span class="lid">L3-08</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<article class="lcard cc3" data-l="L3" data-s="l3-08 解码层装配：三个子块的顺序 models/glm5_next/modeling_glm5_next.py modeling_layers.py modeling_outputs.py">
+<div class="lchd"><span class="lid">L3-08</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
 <h3>解码层装配：三个子块的顺序</h3>
 <ul class="lpts">
 <li>mHC → 注意力 → mHC → MoE 的完整顺序</li>
@@ -525,7 +525,7 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <div class="lft"><span class="nfile">3 个源文件</span>
 <code class="inl">modeling_glm5_next.py +2</code>
 </div>
-<span class="lgo dis">尚未产出</span>
+<a class="lgo" href="L3-backbone/L3-08/index.html">打开课件 →</a>
 </article>
 <article class="lcard cc4 planned" data-l="L4" data-s="l4-01 ★ 为什么 glm-5 要混合两种注意力 models/glm5_next/modeling_glm5_next.py">
 <div class="lchd"><span class="lid">L4-01</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
@@ -1072,7 +1072,7 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 </div>
 <span class="lgo dis">尚未产出</span>
 </article>
-<article class="lcard cc3 planned" data-l="L9" data-s="l9-08 收束：一次 glm-5 推理的完整文件清单 ">
+<article class="lcard cc3 planned" data-l="L9" data-s="l9-08 收束：一次 glm-5 推理的完整文件清单 models/glm5_next/modeling_glm5_next.py models/glm5_next/configuration_glm5_next.py">
 <div class="lchd"><span class="lid">L9-08</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
 <h3>收束：一次 GLM-5 推理的完整文件清单</h3>
 <ul class="lpts">
@@ -1080,7 +1080,8 @@ a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
 <li>重新回答 L0-01 的全景图，这次每一块都能说出文件名</li>
 <li>实测统计：231 个文件、多少行、多少课</li>
 </ul>
-<div class="lft"><span class="nfile">0 个源文件</span>
+<div class="lft"><span class="nfile">2 个源文件</span>
+<code class="inl">modeling_glm5_next.py +1</code>
 </div>
 <span class="lgo dis">尚未产出</span>
 </article>
