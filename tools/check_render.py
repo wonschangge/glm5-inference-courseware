@@ -20,16 +20,29 @@ import common as C
 from common import R
 
 OVERFLOW_JS = """() => {
+  /* 两层判据都要过：
+     (a) 元素四边都在**视口**内（防止被推到屏幕外点不到）
+     (b) 元素四边都在 **#visual** 内（防止溢出舞台可视区，但仍落在视口里
+         而被漏报 —— 只比视口会漏掉这一类）
+     容差 1px 避免亚像素误差。 */
   const out = [], vw = innerWidth, vh = innerHeight;
   const root = document.querySelector('#visual');
   if (!root) return ['#visual MISSING'];
+  const vr = root.getBoundingClientRect();
+  const name = el => (el.className && String(el.className).split(' ')[0]) || el.tagName;
+  const box = b => '[' + Math.round(b.left) + ',' + Math.round(b.top) + ',' +
+                   Math.round(b.right) + ',' + Math.round(b.bottom) + ']';
   root.querySelectorAll('*').forEach(el => {
     const b = el.getBoundingClientRect();
     if (b.width <= 0 || b.height <= 0) return;
     if (b.left < -1 || b.top < -1 || b.right > vw + 1 || b.bottom > vh + 1) {
-      out.push((el.className && String(el.className).split(' ')[0] || el.tagName) +
-               ' [' + Math.round(b.left) + ',' + Math.round(b.top) + ',' +
-               Math.round(b.right) + ',' + Math.round(b.bottom) + ']');
+      out.push('VIEWPORT ' + name(el) + ' ' + box(b));
+      return;
+    }
+    if (el === root.firstElementChild) return;   // .scene 本身就铺满 #visual
+    if (b.left < vr.left - 1 || b.right > vr.right + 1 ||
+        b.top < vr.top - 1 || b.bottom > vr.bottom + 1) {
+      out.push('VISUAL ' + name(el) + ' ' + box(b) + ' vs ' + box(vr));
     }
   });
   return out.slice(0, 12);

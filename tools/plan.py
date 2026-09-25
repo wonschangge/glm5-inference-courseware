@@ -157,7 +157,8 @@ dict(id="L1-05", layer="L1", prio="P0",
      points=["CONFIG_MAPPING 的惰性注册表",
              "auto_factory 的 _LazyAutoMapping 如何做到「用时才导入」",
              "从 model_type 字符串到 Glm5NextConfig 的完整链路"],
-     accept=["能画出 AutoConfig.from_pretrained('glm5_next') 的调用链",
+     accept=["能画出「model_type 字符串 -> 配置类」的完整调用链"
+             "（注意 from_pretrained 的首参是仓库 id/路径，按 model_type 取类要用 for_model）",
              "能解释惰性映射省下了什么"]),
 
 dict(id="L1-06", layer="L1", prio="P1",
