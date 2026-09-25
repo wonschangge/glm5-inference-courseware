@@ -296,7 +296,7 @@ class Glm5NextTextConfig(PreTrainedConfig):`,
     index_n_heads: int = 32
     head_dim: int = 0
     layer_types: list[str] | None = None
-    # `"full"` runs the indexer, `"shared"` reuses the previous full layer's index mask.
+    # \`"full"\` runs the indexer, \`"shared"\` reuses the previous full layer's index mask.
     indexer_types: list[str] | None = None`,
   codeNote: 'index_head_dim 是索引器的头宽，与注意力头的 256 无关 —— 别把这两个数混起来。',
   duration: 17000,
@@ -551,7 +551,7 @@ class Glm5NextTextConfig(PreTrainedConfig):`,
   lang: 'python',
   codeStart: 207,
   code: `    def validate_architecture(self):
-        """Part of `@strict`-powered validation. Validates the architecture of the config."""
+        """Part of \`@strict\`-powered validation. Validates the architecture of the config."""
         if self.num_attention_heads != self.num_key_value_heads:
             raise ValueError(
                 f"num_attention_heads ({self.num_attention_heads}) must be the same as "
@@ -565,7 +565,7 @@ class Glm5NextTextConfig(PreTrainedConfig):`,
             raise ValueError(f"index_topk ({self.index_topk}) must be divisible by index_kpool ({self.index_kpool}).")
 
         if self.q_lora_rank is None:
-            raise ValueError("For DSA usage in the attention layers, the `q_lora_rank` is strictly required!")
+            raise ValueError("For DSA usage in the attention layers, the \`q_lora_rank\` is strictly required!")
 
         if self.qk_rope_head_dim > 0:
             raise ValueError(

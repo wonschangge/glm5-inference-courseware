@@ -154,7 +154,7 @@ const SCENES = [
     const legend = U.el('div', { class: 'row gap12 wrap', style: 'width:100%' });
     legend.innerHTML =
       '<span class="chip c0"><i class="sw sw-c0"></i>被选中的 8 个</span>' +
-      '<span class="chip"><i class="sw" style="background:rgba(150,180,255,.35)"></i>这一次前向里完全不参与计算</span>' +
+      '<span class="chip"><i class="sw" style="background:rgba(150,180,255,.35)"></i>这次前向不参与计算</span>' +
       '<span class="dim mono" style="margin-left:auto;font-size:11px">8 / 288 = 2.78%</span>';
     viz.appendChild(legend);
 
@@ -182,7 +182,8 @@ const SCENES = [
         c.style.borderColor = 'var(--c0)';
         c.style.background = 'rgba(56,189,248,.34)';
         c.style.color = '#fff';
-        c.style.transform = 'scale(1.18)';
+        c.style.boxShadow = '0 0 0 2px var(--c0), 0 0 14px -1px var(--c0)';
+        c.style.zIndex = '3';
         c.textContent = String(pi);
         msg.innerHTML = '叫醒第 <em>' + (k + 1) + '</em> / 8 个 &nbsp;<span class="cm">// expert ' + pi + '</span>';
       });
@@ -319,9 +320,30 @@ const SCENES = [
     wrap.appendChild(bar);
     bar.innerHTML = '<span class="cm">// hidden_states = experts(...) + shared_experts(residuals)</span>';
 
-    /* 数据包：两条路径都汇到「+」 */
+    /* 数据包：两条路径都汇到「+」。注意 FLOW.resize() 把 canvas 的 CSS 盒子与
+       位图都按**屏幕像素**设尺寸，而路径用的是**舞台坐标** —— 乘上缩放比后
+       canvas 会比 #visual 宽。这里按「盒子 = 舞台像素、位图 = dpr x 舞台像素」
+       重设一次，既对齐又不溢出（引擎文件不可改）。 */
+    const pinCanvas = () => {
+      const cv = FLOW.cv; if (!cv) return;
+      const host = U.q('#visual'), s = U.scale || 1;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const r = host.getBoundingClientRect();
+      const w = r.width / s, h = r.height / s;
+      cv.style.width = w.toFixed(1) + 'px';
+      cv.style.height = h.toFixed(1) + 'px';
+      cv.width = Math.round(w * dpr);
+      cv.height = Math.round(h * dpr);
+      FLOW.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      FLOW.W = w; FLOW.H = h;
+    };
     try {
       FLOW.attach(U.q('#visual'));
+      pinCanvas();
+      if (!window.__flowPinL004) {
+        window.__flowPinL004 = true;
+        window.addEventListener('resize', pinCanvas);
+      }
       FLOW.pathBetween('routed', midA, right);
       FLOW.pathBetween('shared', midB, right);
       FLOW.rail('routed', 1200, '56,189,248');
