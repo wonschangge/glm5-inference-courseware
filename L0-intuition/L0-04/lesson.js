@@ -90,8 +90,24 @@ const SCENES = [
     budget.appendChild(bA); budget.appendChild(bB);
     viz.appendChild(budget);
 
+    /* 本课路线：四幕各解决一个「为什么」 */
+    const road = U.el('div', { class: 'row gap12', style: 'width:100%;align-items:stretch' });
+    const roadEls = [
+      { cc: 0, t: '第一幕 · 稀疏', s: '288 个盒子里只叫醒 8 个' },
+      { cc: 4, t: '第二幕 · 预算', s: '48.17× 的参数 vs 1.51× 的算力' },
+      { cc: 1, t: '第三幕 · 共享专家', s: '它凭什么永远开着' },
+      { cc: 3, t: '第七幕 · 训练/推理', s: '辅助损失不进 decode' },
+    ].map(d => {
+      const e = W.card({ cc: d.cc, title: '<span class="mono" style="font-size:11px">' + d.t + '</span>',
+        sub: d.s, style: 'flex:1' });
+      road.appendChild(e); return e;
+    });
+    viz.appendChild(road);
+
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);
+
+    roadEls.forEach(e => { e.style.opacity = '.3'; });
 
     fl.focus(0);
     msg.innerHTML = '<span class="cm">// 一个稀疏层三板斧：路由器 + 专家池 + 共享专家</span>';
@@ -106,6 +122,11 @@ const SCENES = [
       statEls.forEach(e => e.classList.remove('ac'));
       bA.classList.add('ac'); bB.classList.add('ac');
       msg.innerHTML = '<span class="cm">// 容量按 288 份买，账单按 9 份付 —— 这就是本课的标题</span>';
+    });
+    tl.at(15500, () => {
+      bA.classList.remove('ac'); bB.classList.remove('ac');
+      roadEls.forEach(e => { e.style.opacity = '1'; });
+      msg.innerHTML = '<span class="cm">// 接下来四幕：稀疏 → 预算 → 共享专家 → 训练/推理的边界</span>';
     });
   },
 },
@@ -250,6 +271,17 @@ const SCENES = [
       '<span class="chip c0">每 token 227.7M = 8×25.17M + 25.17M + 1.18M</span>';
     viz.appendChild(chips);
 
+    /* 两个倍数的读法 */
+    const read = U.el('div', { class: 'row gap12', style: 'width:100%;align-items:stretch' });
+    const rA = W.card({ cc: 2, tint: 2, title: '为什么参数能到 48 倍', style: 'flex:1',
+      sub: '专家池把中间维从 12288 降到 2048（单专家只有稠密层的 1/6），但买了 288 份。'
+         + '<span class="mono" style="font-size:10.5px">288 / 6 = 48</span>' });
+    const rB = W.card({ cc: 4, tint: 4, title: '为什么算力只有 1.5 倍', style: 'flex:1',
+      sub: '每个 token 只走 9 份（8 路由 + 1 共享），所以账单与「选中几个」成正比，'
+         + '与「装了多少个」无关。' });
+    read.appendChild(rA); read.appendChild(rB);
+    viz.appendChild(read);
+
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);
 
@@ -262,7 +294,12 @@ const SCENES = [
       msg.innerHTML = '整模型：<em>313.79 B</em> 里每次前向只走 <em>17.84 B</em>（5.68%）';
     });
     tl.at(14000, () => {
+      rA.classList.add('ac');
       msg.innerHTML = '<span class="cm">// 48 倍的容量、1.5 倍的账单 —— 差距全部来自「只算被选中的」</span>';
+    });
+    tl.at(16500, () => {
+      rA.classList.remove('ac'); rB.classList.add('ac');
+      msg.innerHTML = '买 288 份容量、每 token 只结算 9 份 —— 这就是 MoE 把「参数」和「算力」解耦的方式';
     });
   },
 },
@@ -289,7 +326,9 @@ const SCENES = [
     const wrap = U.el('div', { class: 'col gap14', style: 'width:100%;height:100%' });
     root.appendChild(wrap);
 
-    const viz = U.el('div', { class: 'row gap12 vizgrow', style: 'align-items:center' });
+    /* 注意：.vizgrow 自带 flex-direction:column，这里必须用行内样式抢回 row */
+    const viz = U.el('div', { class: 'row gap12 vizgrow',
+      style: 'flex-direction:row;align-items:center' });
     wrap.appendChild(viz);
 
     const left = W.card({ cc: 4, tint: 4, title: 'hidden_states', style: 'flex:1',
