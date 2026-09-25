@@ -13,6 +13,7 @@
 """
 import os
 import sys
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import common as C
@@ -136,6 +137,7 @@ def main(argv):
     with sync_playwright() as p:
         br = p.chromium.launch(executable_path=chrome,
                                args=["--allow-file-access-from-files", "--no-sandbox",
+                                     "--disable-dev-shm-usage", "--disable-gpu",
                                      "--force-color-profile=srgb"])
         for lid, d in lessons:
             html = os.path.join(d, "index.html")
@@ -146,14 +148,33 @@ def main(argv):
             url = "file://" + os.path.abspath(html)
             problems = []
             for (w, h) in resolutions:
-                pg = br.new_page(viewport={"width": w, "height": h},
-                                 device_scale_factor=1)
-                errs, cerrs, overflow, inter = check_page(
-                    pg, url, shots, f"{lid}_{w}x{h}")
-                geo = pg.evaluate(STAGE_JS)
-                nsc = pg.evaluate("() => (RENDER.scenes||[]).length")
-                total_scenes = max(total_scenes, nsc)
-                pg.close()
+                # 浏览器在并发压力下可能瞬时崩溃（Target crashed）。
+                # 这是环境问题而非课件问题，重试几次再判定，避免假失败。
+                last_err = None
+                for attempt in range(3):
+                    pg = br.new_page(viewport={"width": w, "height": h},
+                                     device_scale_factor=1)
+                    try:
+                        errs, cerrs, overflow, inter = check_page(
+                            pg, url, shots, f"{lid}_{w}x{h}")
+                        geo = pg.evaluate(STAGE_JS)
+                        nsc = pg.evaluate("() => (RENDER.scenes||[]).length")
+                        total_scenes = max(total_scenes, nsc)
+                        pg.close()
+                        last_err = None
+                        break
+                    except Exception as e:
+                        last_err = e
+                        try:
+                            pg.close()
+                        except Exception:
+                            pass
+                        if attempt < 2:
+                            time.sleep(3 + attempt * 4)
+                if last_err is not None:
+                    problems.append(f"{w}x{h} 浏览器连续 3 次崩溃（环境问题，非课件问题）: "
+                                    f"{str(last_err)[:90]}")
+                    continue
                 if errs:
                     problems.append(f"{w}x{h} JS 异常 {len(errs)}: " + errs[0][:120])
                 if cerrs:

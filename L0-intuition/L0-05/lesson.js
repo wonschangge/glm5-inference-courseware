@@ -108,6 +108,27 @@ function sumBox(label, vals) {
   return box;
 }
 
+/* ---- FLOW 的尺寸修正 ----------------------------------------------------
+   shared/engine.js 的 FLOW.resize() 用「屏幕像素」写 canvas 的 CSS 尺寸，
+   但 canvas 在 #stage 里还会被 transform: scale(s) 再缩一次：
+   s = 0.8（1280x720）时画布比可视区小、s = 1.2（1920x1080）时会溢出 34px。
+   这里在课件侧把 CSS 尺寸与缓冲区都换成「舞台像素」；shared/ 不动。 */
+let flowPatched = false;
+function flowFix() {
+  if (!FLOW.cv || !FLOW.ctx) return;
+  const r = U.q('#visual').getBoundingClientRect();
+  const s = U.scale || 1;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.max(1, r.width), h = Math.max(1, r.height);
+  FLOW.cv.style.width = (w / s) + 'px';
+  FLOW.cv.style.height = (h / s) + 'px';
+  FLOW.cv.width = Math.round(w / s * dpr);
+  FLOW.cv.height = Math.round(h / s * dpr);
+  FLOW.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  FLOW.W = w / s; FLOW.H = h / s;
+  if (!flowPatched) { flowPatched = true; window.addEventListener('resize', flowFix); }
+}
+
 /* ---- 「一束流」的小条：画 N 条并行流 ---- */
 function streamBars(n, w, h) {
   const col = U.el('div', { class: 'col gap5' });
@@ -227,7 +248,7 @@ const SCENES = [
   caption: '实测：第 0 层之后 4 条流就不再相同（最大差 2.9e-3）—— 分叉的唯一入口是 post 门控。',
   lang: 'python',
   codeStart: 1495,
-  code: `@@L1495@@`,
+  code: `        hidden_states = inputs_embeds.unsqueeze(2).expand(-1, -1, self.config.hc_mult, -1).contiguous()`,
   codeNote: '全文唯一把 hidden_states 变成 4 维的地方；这一行之后，所有张量都多一维。',
   duration: 17000,
   build(root, tl) {
@@ -236,6 +257,7 @@ const SCENES = [
     const viz = U.el('div', { class: 'vizgrow hstart' });
     wrap.appendChild(viz);
     FLOW.attach(U.q('#visual'));
+    flowFix();
     const lane = U.el('div', { class: 'row gap16 center', style: 'width:100%' });
     viz.appendChild(lane);
 
@@ -573,6 +595,7 @@ const SCENES = [
     const viz = U.el('div', { class: 'col gap12 vizgrow hstart' });
     wrap.appendChild(viz);
     FLOW.attach(U.q('#visual'));
+    flowFix();
 
     viz.appendChild(U.el('div', { class: 'klabel', text: '两路相加：广播相乘 + 矩阵乘' }));
     const lane = U.el('div', { class: 'row gap16 center', style: 'width:100%' });
