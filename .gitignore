@@ -1,4 +1,3 @@
 __pycache__/
 *.pyc
 .venv/
-_data/truth_params.json
