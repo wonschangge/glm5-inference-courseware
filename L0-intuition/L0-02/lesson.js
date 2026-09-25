@@ -349,15 +349,20 @@ class Glm5NextTextConfig(PreTrainedConfig):`,
 
     msg.innerHTML = '<span class="cm">// 先把一个头的宽度拆开看</span>';
     tl.at(2200, () => {
-      rope.style.transform = 'scale(1.06)';
+      /* 只改描边/底色，不做 transform：色块在 #visual 边缘，放大就会越界 */
+      rope.style.boxShadow = '0 0 0 2px rgba(251,113,133,.45), 0 0 22px -4px rgba(251,113,133,.8)';
+      rope.style.background = 'rgba(251,113,133,.20)';
       msg.innerHTML = '旋转的那一段是 <em>0</em> 维 —— 这个架构<b>不做 RoPE</b>';
     });
     tl.at(5200, () => {
-      rope.style.transform = 'none'; nope.style.transform = 'scale(1.03)';
+      rope.style.boxShadow = 'none'; rope.style.background = 'rgba(251,113,133,.10)';
+      nope.style.boxShadow = '0 0 0 2px rgba(167,139,250,.45), 0 0 22px -4px rgba(167,139,250,.8)';
+      nope.style.background = 'rgba(167,139,250,.24)';
       msg.innerHTML = '不旋转的那一段是 <em>256</em> 维：这才是头的真实宽度';
     });
     tl.at(8200, () => {
-      nope.style.transform = 'none'; tb.classList.add('ac');
+      nope.style.boxShadow = 'none'; nope.style.background = 'rgba(167,139,250,.14)';
+      tb.classList.add('ac');
       msg.innerHTML = '<em>head_dim</em> 记的是「可旋转维度」，所以它是 <em>0</em>；总宽记在 <em>qk_head_dim</em>';
     });
     tl.at(11500, () => {
