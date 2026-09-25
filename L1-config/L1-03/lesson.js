@@ -455,6 +455,15 @@ class Glm5NextVisionConfig(PreTrainedConfig):
     }));
     viz.appendChild(back);
 
+    const ids = U.el('div', { class: 'card cc2', style: 'padding:9px 12px;width:100%' });
+    ids.appendChild(U.el('div', { class: 'klabel', text: '另外六个编号平铺在顶层（第八幕展开）' }));
+    const idRow = U.el('div', { class: 'row gap8 wrap center', style: 'width:100%' });
+    idRow.innerHTML = U.chip('image_token_id 154854', 0) + U.chip('video_token_id 154855', 0)
+      + U.chip('image_start_token_id 154830', 2) + U.chip('image_end_token_id 154831', 2)
+      + U.chip('video_start_token_id 154832', 3) + U.chip('video_end_token_id 154833', 3);
+    ids.appendChild(idRow);
+    viz.appendChild(ids);
+
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);
 
@@ -785,6 +794,13 @@ class Glm5NextConfig(PreTrainedConfig):
     exB.style.flex = '1';
     ex.appendChild(exB);
     viz.appendChild(ex);
+
+    const nx = U.el('div', { class: 'row gap12', style: 'width:100%;align-items:stretch' });
+    nx.appendChild(W.card({ cc: 0, style: 'flex:1', title: '回顾 L1-02',
+      sub: '文本配置的 45 层 / 4096 宽 / 64 头；它与本课的视觉配置合起来，才是完整的一份 <code class="inl">Glm5NextConfig</code>。' }));
+    nx.appendChild(W.card({ cc: 1, style: 'flex:1', title: '下一课 L1-04',
+      sub: '配置的序列化、继承与文档生成：<code class="inl">to_dict()</code> 写出什么、<code class="inl">@auto_docstring</code> 在类定义时改了什么。' }));
+    viz.appendChild(nx);
 
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);

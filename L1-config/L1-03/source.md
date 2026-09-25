@@ -117,8 +117,8 @@ class Glm5NextVisionConfig(PreTrainedConfig):
   唯一一句"视觉塔的位置编码与文本主干不同"的声明 —— 轴向 RoPE（高/宽两套频率）在 L2-07 展开；
   `attribute_map = {"num_attention_heads": "num_heads"}` 是一条**别名**：实测
   `getattr(v, "num_attention_heads")` 能读到 16，而 `to_dict()` 里写的键是 `num_heads`。
-- 顺带记住一个不对称：视觉塔的 `attention_bias` 是 `True`，文本主干是 `False`（L132）。
-  这不是笔误，两半塔的注意力实现本来就不一样（L2-07）。
+- 顺带记住一个不对称（两个默认值都在本文件里）：视觉塔的 `attention_bias` 是 `True`，
+  文本主干是 `False`（L132）。两半各用各的默认值，读形状时不要互相套用（差异的细节在 L2-07）。
 
 几何字段 —— 本课最该记住的一段：
 
