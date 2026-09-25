@@ -92,11 +92,11 @@
 
 | # | 课号 | 主题 | 优先级 | 文件数 | 状态 |
 |---|---|---|---|---|---|
-| 1 | `L0-01` | 一次 generate() 里发生了什么 | P0 | 1 | ⬜ |
-| 2 | `L0-02` | 配置即架构：从 config 读出全部形状 | P0 | 1 | ⬜ |
+| 1 | `L0-01` | 一次 generate() 里发生了什么 | P0 | 1 | ✅ |
+| 2 | `L0-02` | 配置即架构：从 config 读出全部形状 | P0 | 1 | ✅ |
 | 3 | `L0-03` | 层类型排布：34 层 KDA + 11 层 MLA | P0 | 1 | ⬜ |
-| 4 | `L0-04` | MoE 经济学：288 选 8 | P0 | 1 | ⬜ |
-| 5 | `L0-05` | mHC：4 条残差流 | P1 | 1 | ⬜ |
+| 4 | `L0-04` | MoE 经济学：288 选 8 | P0 | 1 | ✅ |
+| 5 | `L0-05` | mHC：4 条残差流 | P1 | 1 | ✅ |
 
 <details><summary><b>L0-01</b> 一次 generate() 里发生了什么 <code>L0-intuition/L0-01</code></summary>
 
@@ -1506,7 +1506,7 @@
 
 **推理之外，但推理离不开的那些文件** —— 导出器、运行期基础设施、对话模板、量化集成、模型族继承链，以及全量收束。
 
-课时数：8 ｜ 覆盖文件：81
+课时数：8 ｜ 覆盖文件：83
 
 | # | 课号 | 主题 | 优先级 | 文件数 | 状态 |
 |---|---|---|---|---|---|
@@ -1517,7 +1517,7 @@
 | 67 | `L9-05` | 对话模板与工具调用解析 | P1 | 5 | ⬜ |
 | 68 | `L9-06` | 量化集成层 | P1 | 13 | ⬜ |
 | 69 | `L9-07` | 模型族继承链：GLM-5 站在谁的肩膀上 | P1 | 23 | ⬜ |
-| 70 | `L9-08` | 收束：一次 GLM-5 推理的完整文件清单 | P0 | 0 | ⬜ |
+| 70 | `L9-08` | 收束：一次 GLM-5 推理的完整文件清单 | P0 | 2 | ⬜ |
 
 <details><summary><b>L9-01</b> 导出器：把模型交给别的运行时 <code>L9-periphery/L9-01</code></summary>
 
@@ -1734,6 +1734,8 @@
 
 **覆盖文件**
 
+- `models/glm5_next/modeling_glm5_next.py`
+- `models/glm5_next/configuration_glm5_next.py`
 
 </details>
 
@@ -1889,10 +1891,10 @@
 | `models/glm4v_moe/configuration_glm4v_moe.py` | 223 | L9-07 |
 | `models/glm4v_moe/modeling_glm4v_moe.py` | 1828 | L9-07 |
 | `models/glm5_next/__init__.py` | 33 | L9-07 |
-| `models/glm5_next/configuration_glm5_next.py` | 322 | L0-02, L0-03, L1-02, L1-03 |
+| `models/glm5_next/configuration_glm5_next.py` | 322 | L0-02, L0-03, L1-02, L1-03, L9-08 |
 | `models/glm5_next/image_processing_glm5_next.py` | 323 | L2-06 |
 | `models/glm5_next/image_processing_pil_glm5_next.py` | 323 | L2-06 |
-| `models/glm5_next/modeling_glm5_next.py` | 2445 | L0-01, L0-04, L0-05, L2-07, L3-01, L3-02, L3-03, L3-04, L3-05, L3-06, L3-07, L3-08, L4-01, L4-02, L4-03, L4-04, L4-05, L4-06, L4-07, L4-08, L7-03 |
+| `models/glm5_next/modeling_glm5_next.py` | 2445 | L0-01, L0-04, L0-05, L2-07, L3-01, L3-02, L3-03, L3-04, L3-05, L3-06, L3-07, L3-08, L4-01, L4-02, L4-03, L4-04, L4-05, L4-06, L4-07, L4-08, L7-03, L9-08 |
 | `models/glm5_next/processing_glm5_next.py` | 194 | L2-06 |
 | `models/glm5_next/video_processing_glm5_next.py` | 430 | L2-06 |
 | `models/glm_ocr/__init__.py` | 29 | L9-07 |
