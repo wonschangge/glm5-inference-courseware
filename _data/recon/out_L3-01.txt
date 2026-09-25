@@ -1,0 +1,116 @@
+[ERROR] `image_like_kwargs` is part of BaseImageProcessor.preprocess's signature, but not documented. Make sure to add it to the docstring of the function in /data/WORKSPACE/transformer-project/upstream-transformers/src/transformers/image_processing_utils.py.
+======================================================================== 
+[1] 三个类的源码文本对比（只比 class 名与 docstring 之外的内容）
+Glm5NextTextRMSNorm 源码行数 : 19
+Glm5NextRMSNorm     源码行数 : 19
+去掉类名后的行是否逐字相同   : True (17 行)
+======================================================================== 
+[2] 参数量：三种 norm 各自的 Parameter 数
+Glm5NextTextRMSNorm(4096,): parameters=4096  buffers=0
+Glm5NextTextUnweightedRMSNorm(): parameters=0  buffers=0
+Glm5NextTextRMSNormGated(4096,): parameters=4096  buffers=0
+Glm5NextTextRMSNormGated(128): 128
+Glm5NextRMSNorm(256)          : 256
+======================================================================== 
+[3] 类默认 eps 与 config 实际 eps（谁在真正生效）
+Glm5NextTextRMSNorm.__init__ 默认   : 1e-06
+Glm5NextTextUnweightedRMSNorm 默认  : 1e-06
+Glm5NextTextRMSNormGated 默认       : 1e-06
+Glm5NextTextConfig().rms_norm_eps   : 1e-05
+Glm5NextVisionConfig().rms_norm_eps : 1e-05
+======================================================================== 
+[4] 全部实例化点（谁传了 eps、传的是什么）
+  L278: self.input_norm = Glm5NextTextUnweightedRMSNorm(eps=config.rms_norm_eps)
+  L660: self.o_norm = Glm5NextTextRMSNormGated(self.head_dim, eps=self.layer_norm_epsilon)
+  L1129: self.q_a_layernorm = Glm5NextTextRMSNorm(self.q_lora_rank, eps=config.rms_norm_eps)
+  L1137: self.kv_a_layernorm = Glm5NextTextRMSNorm(self.kv_lora_rank, eps=config.rms_norm_eps)
+  L1295: self.input_layernorm = Glm5NextTextRMSNorm(config.hidden_size, config.rms_norm_eps)
+  L1296: self.post_attention_layernorm = Glm5NextTextRMSNorm(config.hidden_size, config.rms_norm_eps)
+  L1439: self.norm = Glm5NextTextRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+  L1613: self.q_norm = Glm5NextRMSNorm(self.head_dim, eps=config.rms_norm_eps)
+  L1614: self.k_norm = Glm5NextRMSNorm(self.head_dim, eps=config.rms_norm_eps)
+  L1691: self.norm1 = Glm5NextRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+  L1692: self.norm2 = Glm5NextRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+  L1834: self.post_layernorm = Glm5NextRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+======================================================================== 
+[5] eps=1e-5 与 1e-6 的差异：按 token 的 RMS 分档实测
+  token RMS=1         两 eps 输出的最大相对差=4.552e-06   eps=1e-5 造成的收缩=0.0005%
+  token RMS=0.1       两 eps 输出的最大相对差=4.496e-04   eps=1e-5 造成的收缩=0.0500%
+  token RMS=0.01      两 eps 输出的最大相对差=4.178e-02   eps=1e-5 造成的收缩=4.6537%
+  token RMS=0.001     两 eps 输出的最大相对差=5.736e-01   eps=1e-5 造成的收缩=69.8489%
+  token RMS=0.00032   两 eps 输出的最大相对差=6.697e-01   eps=1e-5 造成的收缩=89.9321%
+  token RMS=0.0001    两 eps 输出的最大相对差=6.824e-01   eps=1e-5 造成的收缩=96.8393%
+======================================================================== 
+[6] bf16 下还有区别吗（模型实际跑的精度）
+  TextRMSNorm  float32 : eps 1e-5 vs 1e-6 逐元素不同个数 = 1048576 / 1048576   dtype=torch.float32
+  RMSNormGated float32 : eps 1e-5 vs 1e-6 逐元素不同个数 = 1048576 / 1048576   dtype=torch.float32
+  TextRMSNorm  bfloat16: eps 1e-5 vs 1e-6 逐元素不同个数 = 1017 / 1048576   dtype=torch.bfloat16
+  RMSNormGated bfloat16: eps 1e-5 vs 1e-6 逐元素不同个数 = 899 / 1048576   dtype=torch.bfloat16
+======================================================================== 
+[6b] 参数留在 fp32、激活是 bf16 时，返回的 dtype 是谁
+  Glm5NextTextRMSNorm        weight=torch.float32  → 返回 torch.float32 | weight=bf16 → 返回 torch.bfloat16
+  Glm5NextTextRMSNormGated   weight=torch.float32  → 返回 torch.bfloat16| weight=bf16 → 返回 torch.bfloat16
+======================================================================== 
+[6c] 真实的 g_a_proj/g_b_proj 在 init 下给出的 gate 分布
+  head_dim=128, qkv_dim=8192, g_a_proj=(128, 4096), g_b_proj=(8192, 128)
+  gate 预激活: 均值=+0.0001 标准差=0.2997 min=-1.2736 max=+1.4032
+  sigmoid(gate): 均值=0.5000 min=0.2186 max=0.8027 → 输出被整体乘上约 0.500
+======================================================================== 
+[7] 零向量 / 极小 RMS 的极限行为（eps 存在的理由）
+  eps=1e-05: 放大上限 1/sqrt(eps) = 316.2
+    常量输入 1e-06 → 输出绝对值 = 0.000316228   （输入自身 1e-06，被放大了 316.2 倍）
+    常量输入 0.0001 → 输出绝对值 = 0.031607   （输入自身 0.0001，被放大了 316.1 倍）
+    常量输入 0.001 → 输出绝对值 = 0.301511   （输入自身 0.001，被放大了 301.5 倍）
+  eps=1e-06: 放大上限 1/sqrt(eps) = 1000.0
+    常量输入 1e-06 → 输出绝对值 = 0.000999999   （输入自身 1e-06，被放大了 1000.0 倍）
+    常量输入 0.0001 → 输出绝对值 = 0.0995037   （输入自身 0.0001，被放大了 995.0 倍）
+    常量输入 0.001 → 输出绝对值 = 0.707107   （输入自身 0.001，被放大了 707.1 倍）
+  eps 的物理含义：token 的 RMS 低于 sqrt(eps) 时，norm 不再把它拉到 1，
+  而是只放大到 rms/sqrt(eps)。sqrt(1e-5)=3.162e-03, sqrt(1e-6)=1.000e-03
+======================================================================== 
+[8] Gated 版里权重乘法的精度位置（fp32 里乘 vs bf16 里乘）
+  逐元素不同个数 = 199675 / 1048576  (19.04%)
+  最大相对差     = 6.667e-03   （bf16 的 1 ulp ≈ 2^-8 = 3.9e-3）
+======================================================================== 
+[9] gate 的实际分布：sigmoid(gate) 落在哪里
+  gate ~ N(0, 0.02): sigmoid 均值=0.5000  min=0.4779 max=0.5219  占 [0.05,0.95] 的比例=1.0000
+  gate ~ N(0, 0.1): sigmoid 均值=0.5001  min=0.3861 max=0.6067  占 [0.05,0.95] 的比例=1.0000
+======================================================================== 
+[10] 也从源码里数：o_norm 的 gate 是几层、瓶颈多宽
+   self.forget_gate = Glm5NextTextForgetGate(config)
+   self.g_a_proj = nn.Linear(self.hidden_size, self.head_dim, bias=False)
+   self.g_b_proj = nn.Linear(self.head_dim, self.qkv_dim, bias=False)
+   self.o_norm = Glm5NextTextRMSNormGated(self.head_dim, eps=self.layer_norm_epsilon)
+   # Forget gate and input gate
+   g = self.forget_gate(hidden_states)
+   # Final gated norm and proj
+   gate = self.g_b_proj(self.g_a_proj(hidden_states)).view(hidden_shape)
+   output = self.o_norm(core_attn_out, gate).reshape(batch_size, seq_len, -1)
+======================================================================== 
+[11] 整个模型的 norm 参数占比（meta device，不占内存）
+  Glm5NextTextConfig(): hidden_size=4096 layers=45 rms_norm_eps=1e-05
+  模型总参数              : 312,692,428,286
+  Glm5NextTextRMSNorm             :      395,264  (0.000126% of total)
+  Glm5NextTextRMSNormGated        :        4,352  (0.000001% of total)
+  Glm5NextTextUnweightedRMSNorm   :            0  (0.000000% of total)
+  三种 norm 合计           :      399,616  (0.000128% of total)
+  UnweightedRMSNorm 参数   : 0 （0 参数）
+  norm 实例个数            : 237
+======================================================================== 
+[12] 加权 vs 无权重的差别：只是差一个乘数
+  UnweightedRMSNorm(x) 与 RMSNorm(x) 在 weight=1 时相等 : True
+  与 weight 的比值是否恒等于 weight（逐元素）           : True
+  rsqrt(mean(x^2)+eps) 是逐 token 的标量：形状           : (2, 5, 1) vs x 的形状 (2, 5, 64)
+======================================================================== 
+[13] 分块为什么对 norm 成立、对注意力不成立（用仓库自带的 apply_chunking_to_forward）
+  沿 seq 分块 与 整块: 逐位相同 = True  最大绝对差 = 0.0
+  加权版沿 hidden 分块: RuntimeError -> The size of tensor a (64) must match the size of tensor b (16) at non-singleton dimension 
+  无权重版沿 hidden 分块: 不报错，但结果错了 -> 最大绝对差 = 0.8955501317977905  相对差 = 0.27815842628479004
+  反例：沿 seq 的 softmax 再沿 seq 分块: 逐位相同 = False  最大绝对差 = 0.8881024718284607
+  Gated 版的 forward 形参个数 = 2 （hidden_states, gate）→ 分块时要同时切两个张量
+  Gated 沿 seq 分块 逐位相同 = True
+======================================================================== 
+[14] ALL_LAYERNORM_LAYERS 登记表里有谁、谁在用它
+  登记表内容 = ['LayerNorm']
+  本模型里的 norm 类型 = ['Glm5NextTextRMSNorm', 'Glm5NextTextRMSNormGated', 'Glm5NextTextUnweightedRMSNorm']
+  与登记表的交集 = []

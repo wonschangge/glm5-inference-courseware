@@ -4,9 +4,9 @@ backbone_utils.py
 utils/backbone_utils.py
 -->
 
-# L2-07 · 视觉塔：从 336x336 像素到 27 个 token — 源文件
+# L2-07 · 视觉塔：从 336x336 像素到 144 个 token — 源文件
 
-> ★ **实测订正（本课最先要说清的一件事）**：课程标题里的「27 个 token」**与源码不符**。
+> ★ **实测订正（本课最先要说清的一件事）**：常见资料写「27 个 token」，**与源码不符**。
 > 用 `Glm5NextVisionConfig()` 的实测默认值推：`336/14 = 24`，`24 x 24 = 576` 个 patch，
 > 每个 2x2 块合成 1 个 token，得到 **144** 个视觉 token。
 > 本课正文、动画与练习一律用 **144**，证据链在第三节。
@@ -682,6 +682,6 @@ pooler_output -> masked_scatter (text_len + 144, 4096)   out_hidden_size 必须�
 
 > 视觉塔 = `Conv3d` 切 patch（576）→ 24 层非因果 packed 注意力（轴向 RoPE，16 个频率给 H/W 共用）
 > → `Conv2d` 把 2x2 块合成 1 个并投影到 1536（144）→ `masked_scatter` 填进占位符；
-> **标题里的「27 个 token」是错的，实测是 144。**
+> **「27 个 token」是错的，实测是 144。**
 > 另一条容易踩的线：视觉出口宽度 `out_hidden_size` 必须等于文本 `hidden_size`，
 > 否则 `masked_scatter` 那一步直接报 `Image features and image tokens do not match`。

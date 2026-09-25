@@ -251,7 +251,10 @@ body{
 /* 分幕的主视觉块：吃掉剩余高度并在其中居中，避免内容挤在顶部、
    底部留出大片空白。所有分幕都应把「本幕的主角」包在 .vizgrow 里。 */
 .vizgrow{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;
-  align-items:center;min-height:0;width:100%}
+  align-items:center;min-height:0;width:100%;
+  /* 顶部留 5px：卡片聚焦态 .ac 会 translateY(-3px)，
+     贴顶时会把上边缘顶出 #visual（渲染门禁抓到过 3px 越界）。 */
+  padding-top:5px}
 .vizgrow.hstart{align-items:stretch}
 .pop{animation:popIn .5s var(--ease-pop) both}
 .fade{animation:fadeIn .5s var(--ease-out) both}

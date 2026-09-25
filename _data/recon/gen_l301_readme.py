@@ -1,4 +1,23 @@
-# L3-01 · 三种 RMSNorm — 一层里的归一化只有三种形态
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""L3-01 README.md 生成器：引用块同样按行切片，不手抄。"""
+import os
+
+UP = "/data/WORKSPACE/transformer-project/upstream-transformers/src/transformers"
+M = "models/glm5_next/modeling_glm5_next.py"
+OUT = "/data/WORKSPACE/transformer-project/courseware/L3-backbone/L3-01/README.md"
+
+
+def sl(a, b):
+    with open(os.path.join(UP, M), encoding="utf-8") as f:
+        return "\n".join(f.read().split("\n")[a - 1:b])
+
+
+def blk(a, b):
+    return "<!-- src: " + M + " -->\n```python\n" + sl(a, b) + "\n```"
+
+
+md = r'''# L3-01 · 三种 RMSNorm — 一层里的归一化只有三种形态
 
 > 层：**第 3 层 · 文本主干** ｜ 优先级：P0 ｜ 前置课：**L2-07**（视觉塔：从 336x336 像素到 27 个 token）
 
@@ -56,13 +75,7 @@
 
 <!-- src: models/glm5_next/modeling_glm5_next.py -->
 ```python
-class Glm5NextTextUnweightedRMSNorm(nn.Module):
-    def __init__(self, eps: float = 1.0e-6):
-        super().__init__()
-        self.eps = eps
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x * torch.rsqrt(x.float().square().mean(-1, keepdim=True) + self.eps).to(x.dtype)
+@@M:211:217@@
 ```
 
 实测 `parameters()` 为空（`numel() == 0`），`allclose(unweighted(x), weighted(x))` 为 True；
@@ -78,10 +91,7 @@ class Glm5NextTextUnweightedRMSNorm(nn.Module):
 
 <!-- src: models/glm5_next/modeling_glm5_next.py -->
 ```python
-        # Final gated norm and proj
-        gate = self.g_b_proj(self.g_a_proj(hidden_states)).view(hidden_shape)
-        output = self.o_norm(core_attn_out, gate).reshape(batch_size, seq_len, -1)
-        output = self.o_proj(output)
+@@M:766:769@@
 ```
 
 `core_attn_out` 来自递推状态 `S` 的读出（尺度随递推步数累积），`gate` 来自**当前** `hidden_states`。
@@ -92,13 +102,7 @@ RMSNorm 只能把尺度拉回 1，**拉不回「这一维该不该有值」**；
 
 <!-- src: models/glm5_next/modeling_glm5_next.py -->
 ```python
-        self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
-        self.layers = nn.ModuleList(
-            [Glm5NextTextDecoderLayer(config, layer_idx) for layer_idx in range(config.num_hidden_layers)]
-        )
-        self.norm = Glm5NextTextRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
-        self.gradient_checkpointing = False
-        self.hc_head = Glm5NextTextHyperHead()
+@@M:1435:1441@@
 ```
 
 三个类的 `__init__` 默认值都是 `1e-6`，但**全部 12 个实例化点都显式传 `config.rms_norm_eps`**；
@@ -144,3 +148,11 @@ RMSNorm 只能把尺度拉回 1，**拉不回「这一维该不该有值」**；
 > 主干里的 237 个 norm 只有三种形态：**加权**（要方向自由度）、**无权重**（只要尺度）、
 > **门控**（要在逐通道上把 KDA 读出的记忆关掉）；类默认的 `eps=1e-6` 从不生效，
 > 真正跑的是 config 里的 **1e-5**，而它在 bf16 下对 99.9% 的元素没有影响。
+'''
+
+md = md.replace("@@M:211:217@@", sl(211, 217))
+md = md.replace("@@M:766:769@@", sl(766, 769))
+md = md.replace("@@M:1435:1441@@", sl(1435, 1441))
+with open(OUT, "w", encoding="utf-8") as f:
+    f.write(md)
+print("wrote", OUT, len(md.split("\n")), "lines")

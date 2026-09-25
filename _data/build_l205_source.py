@@ -1,4 +1,47 @@
-<!-- glm5-coverage
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""生成 L2-05/source.md（自用脚本，位于 _data/，不在课件目录里）。
+
+所有 ```python 引用块都从上游源文件**切片**写入，绝不手抄 —— 这样保真门禁
+必然通过，也避免"凭记忆改写"。散文部分是手写的。
+"""
+import io
+import os
+
+SRC = os.path.abspath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "..",
+    "upstream-transformers", "src", "transformers"))
+OUT = os.path.abspath(os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "L2-input", "L2-05", "source.md"))
+
+_cache = {}
+
+
+def lines_of(rel):
+    if rel not in _cache:
+        with io.open(os.path.join(SRC, rel), encoding="utf-8") as f:
+            _cache[rel] = f.read().split("\n")
+    return _cache[rel]
+
+
+def block(rel, a, b):
+    body = "\n".join(lines_of(rel)[a - 1:b])
+    return "```python\n" + body + "\n```"
+
+
+PARTS = []
+P = PARTS.append
+
+
+def B(rel, a, b):
+    """安全地追加一个引用块：自动给上一段散文结尾补上 src 标注。"""
+    assert PARTS, "B() 之前必须先有一段散文"
+    if not PARTS[-1].endswith("<!-- src: %s -->" % rel):
+        PARTS[-1] = PARTS[-1].rstrip("\n") + "\n\n<!-- src: %s -->" % rel
+    PARTS.append(block(rel, a, b))
+
+# ================================================================== 头部
+P('''<!-- glm5-coverage
 image_transforms.py
 image_utils.py
 video_processing_utils.py
@@ -99,39 +142,9 @@ audio_utils.py
 
 先看**张量级**那份。它处理 `np.ndarray`，但内部还是要绕一趟 PIL：
 
-<!-- src: image_transforms.py -->
-```python
-    # For all transformations, we want to keep the same data format as the input image unless otherwise specified.
-    # The resized image from PIL will always have channels last, so find the input format first.
-    if input_data_format is None:
-        input_data_format = infer_channel_dimension_format(image)
-    data_format = input_data_format if data_format is None else data_format
-
-    # To maintain backwards compatibility with the resizing done in previous image feature extractors, we use
-    # the pillow library to resize the image and then convert back to numpy
-    do_rescale = False
-    if not isinstance(image, PIL.Image.Image):
-        do_rescale = _rescale_for_pil_conversion(image)
-        image = to_pil_image(image, do_rescale=do_rescale, input_data_format=input_data_format)
-    height, width = size
-    # PIL images are in the format (width, height)
-    resized_image = image.resize((width, height), resample=resample, reducing_gap=reducing_gap)
-
-    if return_numpy:
-        resized_image = np.array(resized_image)
-        # If the input image channel dimension was of size 1, then it is dropped when converting to a PIL image
-        # so we need to add it back if necessary.
-        resized_image = np.expand_dims(resized_image, axis=-1) if resized_image.ndim == 2 else resized_image
-        # The image is always in channels last format after converting from a PIL image
-        resized_image = to_channel_dimension_format(
-            resized_image, data_format, input_channel_dim=ChannelDimension.LAST
-        )
-        # If an image was rescaled to be in the range [0, 255] before converting to a PIL image, then we need to
-        # rescale it back to the original range.
-        resized_image = rescale(resized_image, 1 / 255) if do_rescale else resized_image
-    return resized_image
-```
-
+''')
+B("image_transforms.py", 353, 381)
+P('''
 **读法**：
 - 块内第 5 行 `data_format = input_data_format if data_format is None else data_format`
   是本层的**总纲**：变换不改变通道顺序，除非你显式要求。
@@ -145,27 +158,9 @@ audio_utils.py
 
 再看**PIL 版**。它干脆假设输入已经是 PIL 图像，于是省掉整个往返：
 
-<!-- src: image_utils.py -->
-```python
-        if not isinstance(image, PIL.Image.Image):
-            image = self.to_pil_image(image)
-
-        if isinstance(size, list):
-            size = tuple(size)
-
-        if isinstance(size, int) or len(size) == 1:
-            if default_to_square:
-                size = (size, size) if isinstance(size, int) else (size[0], size[0])
-            else:
-                width, height = image.size
-                # specified size only for the smallest edge
-                short, long = (width, height) if width <= height else (height, width)
-                requested_new_short = size if isinstance(size, int) else size[0]
-
-                if short == requested_new_short:
-                    return image
-```
-
+''')
+B("image_utils.py", 829, 845)
+P('''
 **读法**：
 - 没有 `do_rescale`、没有 `to_channel_dimension_format`。
   **代价换了个地方付**：调用者必须先把张量转成 PIL（`to_pil_image`）。
@@ -177,33 +172,9 @@ audio_utils.py
 
 ### 裁剪：`center_crop` 里的整数除法
 
-<!-- src: image_transforms.py -->
-```python
-    if input_data_format is None:
-        input_data_format = infer_channel_dimension_format(image)
-    output_data_format = data_format if data_format is not None else input_data_format
-
-    # We perform the crop in (C, H, W) format and then convert to the output format
-    image = to_channel_dimension_format(image, ChannelDimension.FIRST, input_data_format)
-
-    orig_height, orig_width = get_image_size(image, ChannelDimension.FIRST)
-    crop_height, crop_width = size
-    crop_height, crop_width = int(crop_height), int(crop_width)
-
-    # In case size is odd, (image_shape[0] + size[0]) // 2 won't give the proper result.
-    top = (orig_height - crop_height) // 2
-    bottom = top + crop_height
-    # In case size is odd, (image_shape[1] + size[1]) // 2 won't give the proper result.
-    left = (orig_width - crop_width) // 2
-    right = left + crop_width
-
-    # Check if cropped area is within image boundaries
-    if top >= 0 and bottom <= orig_height and left >= 0 and right <= orig_width:
-        image = image[..., top:bottom, left:right]
-        image = to_channel_dimension_format(image, output_data_format, ChannelDimension.FIRST)
-        return image
-```
-
+''')
+B("image_transforms.py", 481, 503)
+P('''
 **读法**：
 - 块内第 5 行先把通道轴换到最前面（`(C, H, W)`），裁完再换回去。
   **统一在一套坐标系里做几何运算**，是这个文件的另一个总纲。
@@ -219,27 +190,9 @@ audio_utils.py
 
 ## 三、★ normalize：为什么第一步是 `astype(np.float32)`
 
-<!-- src: image_transforms.py -->
-```python
-    if input_data_format is None:
-        input_data_format = infer_channel_dimension_format(image)
-
-    channel_axis = get_channel_dimension_axis(image, input_data_format=input_data_format)
-    num_channels = image.shape[channel_axis]
-
-    # We cast to float32 to avoid errors that can occur when subtracting uint8 values.
-    # We preserve the original dtype if it is a float type to prevent upcasting float16.
-    if not np.issubdtype(image.dtype, np.floating):
-        image = image.astype(np.float32)
-
-    if isinstance(mean, Collection):
-        if len(mean) != num_channels:
-            raise ValueError(f"mean must have {num_channels} elements if it is an iterable, got {len(mean)}")
-    else:
-        mean = [mean] * num_channels
-    mean = np.array(mean, dtype=image.dtype)
-```
-
+''')
+B("image_transforms.py", 411, 427)
+P('''
 **读法**：
 - 块内第 7~9 行是本课最便宜也最重要的一处：`uint8` 做 `image - mean` 会**回绕**
   （`3 - 5 = 254`），所以必须先 cast 到 float32。
@@ -250,17 +203,9 @@ audio_utils.py
   但前提是它和 `num_channels` 对得上（对不上就 raise，不静默）。
 - 真正的算式在源码第 436~439 行（见下），它按数据格式分成两支。
 
-<!-- src: image_transforms.py -->
-```python
-    if input_data_format == ChannelDimension.LAST:
-        image = (image - mean) / std
-    else:
-        image = ((image.T - mean) / std).T
-
-    image = to_channel_dimension_format(image, data_format, input_data_format) if data_format is not None else image
-    return image
-```
-
+''')
+B("image_transforms.py", 436, 442)
+P('''
 **读法**：
 - `channels_last` 时 `mean` 直接对上最后一维，一行搞定。
 - `channels_first` 时先 `.T` 把通道轴换到末尾、算完再 `.T` 回来。
@@ -271,17 +216,9 @@ audio_utils.py
 
 `image_utils` 里还留着"按格式分两支"的最短写法 —— 归一化要用它定位通道轴：
 
-<!-- src: image_utils.py -->
-```python
-    if input_data_format is None:
-        input_data_format = infer_channel_dimension_format(image)
-    if input_data_format == ChannelDimension.FIRST:
-        return image.ndim - 3
-    elif input_data_format == ChannelDimension.LAST:
-        return image.ndim - 1
-    raise ValueError(f"Unsupported data format: {input_data_format}")
-```
-
+''')
+B("image_utils.py", 340, 346)
+P('''
 **读法**：
 - 通道轴不是写死的 1 或 3，而是用 `image.ndim - 3` / `image.ndim - 1` 算出来的：
   **同一个函数要同时服务 3 维 `(C,H,W)`、4 维 `(B,C,H,W)`、5 维 `(B,T,C,H,W)`**。
@@ -299,25 +236,9 @@ audio_utils.py
 `image_transforms.py` 提供的是**通用工具**：两个步进循环，返回一个 patch 列表。
 可读性优先，代价是**它不带 batch 维**。先看签名与 docstring：
 
-<!-- src: image_transforms.py -->
-```python
-def divide_to_patches(
-    image: Union[np.ndarray, "torch.Tensor"], patch_size: int | tuple[int, int]
-) -> list[Union[np.ndarray, "torch.Tensor"]]:
-    """
-    Divides an image into patches of a specified size.
-
-    Args:
-        image (`np.array | "torch.Tensor"`):
-            The input image.
-        patch_size (`int` or `tuple[int, int]`):
-            The size of each patch. If an int, patches are square. If a tuple,
-            it is interpreted as `(patch_height, patch_width)`.
-    Returns:
-        list: A list of `np.array | "torch.Tensor"` representing the patches.
-    """
-```
-
+''')
+B("image_transforms.py", 839, 853)
+P('''
 **读法**：
 - `patch_size` 既接受 `int` 也接受 `(h, w)` 元组 —— 全库统一的"尺寸参数"惯例
   （`SizeDict` / `resize` 的 `size` 都一样宽进严出）。
@@ -329,19 +250,9 @@ def divide_to_patches(
 
 循环体紧接在 docstring 之后（同一个函数的后半段）：
 
-<!-- src: image_transforms.py -->
-```python
-    patch_h, patch_w = (patch_size, patch_size) if isinstance(patch_size, int) else patch_size
-    patches = []
-    height, width = get_image_size(image, channel_dim=ChannelDimension.FIRST)
-    for i in range(0, height, patch_h):
-        for j in range(0, width, patch_w):
-            patch = image[..., i : i + patch_h, j : j + patch_w]
-            patches.append(patch)
-
-    return patches
-```
-
+''')
+B("image_transforms.py", 854, 862)
+P('''
 **读法**：
 - 两个 `range(..., patch_h/patch_w)` 的步进循环，**行优先**遍历，
   所以返回顺序是光栅序（第五节的 permute 版会打破这个顺序）。
@@ -360,41 +271,9 @@ def divide_to_patches(
 视觉 token 的真正来源是这里。它不在 `image_transforms.py` 里 ——
 模型的切块逻辑写在处理器里，用的是纯张量操作：
 
-<!-- src: models/glm5_next/image_processing_glm5_next.py -->
-```python
-    def patchify(
-        self,
-        images: "torch.Tensor",
-        patch_size: int,
-        merge_size: int,
-        temporal_patch_size: int,
-    ) -> tuple["torch.Tensor", int, int]:
-        """Patchifies each image into flat layout of shape (`seq_len`, `patch_dim`) so we can concat dynamically shaped pixels."""
-        batch_size, channel, resized_height, resized_width = images.shape
-        grid_h, grid_w = resized_height // patch_size, resized_width // patch_size
-        patches = images.reshape(
-            batch_size,
-            channel,
-            grid_h // merge_size,
-            merge_size,
-            patch_size,
-            grid_w // merge_size,
-            merge_size,
-            patch_size,
-        )
-        patches = patches.permute(0, 2, 5, 3, 6, 1, 4, 7)
-        flatten_patches = (
-            patches.unsqueeze(6)
-            .expand(-1, -1, -1, -1, -1, -1, temporal_patch_size, -1, -1)
-            .reshape(
-                batch_size,
-                grid_h * grid_w,
-                channel * temporal_patch_size * patch_size * patch_size,
-            )
-        )
-        return flatten_patches, grid_h, grid_w
-```
-
+''')
+B("models/glm5_next/image_processing_glm5_next.py", 185, 215)
+P('''
 > **边界声明**：本课一共 21 个引用块，其中 **18 个**来自上面 coverage 声明的六个文件，
 > 另外 3 个（`image_processing_glm5_next.py`、`processing_glm5_next.py`、
 > `video_processing_glm5_next.py`）属于 **L2-06 的覆盖域，不计入本课覆盖率**。
@@ -444,14 +323,9 @@ merge（spatial_merge_size = 2）
 `576 / 4 = 144` 这个除法在处理器里是显式写着的 —— 它决定了要往 prompt 里
 塞多少个占位符，也就是文本序列要为视觉预留多少个位置：
 
-<!-- src: models/glm5_next/processing_glm5_next.py -->
-```python
-    def replace_image_token(self, image_inputs: dict, image_idx: int, **kwargs) -> str:
-        merge_length = self.image_processor.merge_size**2
-        num_image_tokens = image_inputs["image_grid_thw"][image_idx].prod() // merge_length
-        return self.image_token * num_image_tokens
-```
-
+''')
+B("models/glm5_next/processing_glm5_next.py", 63, 66)
+P('''
 > **边界声明**：同第五节 —— 此块属于 L2-06 覆盖域，**不计入本课覆盖率**。
 
 **读法**：
@@ -473,29 +347,9 @@ merge（spatial_merge_size = 2）
 一张图算完了，一批图怎么办？`preprocess` 里对图片做的是
 "按形状分组 → 组内堆叠 → 一起算 → 再还原顺序"。核心是下面这段：
 
-<!-- src: image_transforms.py -->
-```python
-    # If disable grouping is not explicitly provided, we favor disabling it if the images are on CPU, and enabling it otherwise.
-    if disable_grouping is None:
-        device = _get_device_from_images(images, is_nested)
-        disable_grouping = device.type == "cpu"
-
-    if disable_grouping:
-        grouped_images_index = {key: (key, 0) for key, _ in _iterate_items(images, is_nested)}
-        if is_nested:
-            grouped_images_index["_num_sublists"] = len(images)
-
-        grouped_images = {key: img.unsqueeze(0) for key, img in _iterate_items(images, is_nested)}
-        paired_grouped_values = [
-            dict.fromkeys(grouped_images, None)
-            if paired_list is None
-            else {key: [item] for key, item in _iterate_items(paired_list, is_nested)}
-            for paired_list in paired_inputs
-        ]
-
-        return grouped_images, *paired_grouped_values, grouped_images_index
-```
-
+''')
+B("image_transforms.py", 1029, 1047)
+P('''
 **读法**：
 - 块内第 4~5 行是本函数唯一的**性能决策**：CPU 上不做分组。
   注释写明了依据（PR #38157）—— CPU 上 `torch.stack` 的拷贝比省下的
@@ -509,17 +363,9 @@ merge（spatial_merge_size = 2）
 
 还原那一步没有技巧，全是查表 —— 注意它用 `is_nested` 分成两支：
 
-<!-- src: image_transforms.py -->
-```python
-    if not is_nested:
-        return [
-            processed_images[grouped_images_index[i][0]][grouped_images_index[i][1]]
-            for i in range(len(grouped_images_index))
-        ]
-
-    return _reconstruct_nested_structure(grouped_images_index, processed_images)
-```
-
+''')
+B("image_transforms.py", 1096, 1102)
+P('''
 **读法**：
 - 非嵌套时就是一行列表推导：`processed_images[shape][组内第几个]`。
   两个索引都在 `grouped_images_index` 里现成放着。
@@ -534,29 +380,9 @@ merge（spatial_merge_size = 2）
 
 视频处理器复用图像后端，只在前面多了一步：**先决定要哪些帧**。
 
-<!-- src: video_utils.py -->
-```python
-def get_uniform_frame_indices(total_num_frames: int, num_frames: int | None = None):
-    """
-    Creates a numpy array for uniform sampling of `num_frame` frames from `total_num_frames`
-    when loading a video.
-
-    Args:
-        total_num_frames (`int`):
-            Total number of frames that a video has.
-        num_frames (`int`, *optional*):
-            Number of frames to sample uniformly. If not specified, all frames are sampled.
-
-    Returns:
-        np.ndarray: np array of frame indices that will be sampled.
-    """
-    if num_frames is not None:
-        indices = np.arange(0, total_num_frames, total_num_frames / num_frames).astype(int)
-    else:
-        indices = np.arange(0, total_num_frames).astype(int)
-    return indices
-```
-
+''')
+B("video_utils.py", 285, 303)
+P('''
 **读法**：
 - `np.arange(0, total, total / num_frames)` —— 步长**不取整**，最后才 `.astype(int)`。
   这样最后一帧尽量贴近末尾，比 `linspace(0, N-1, n)` 更接近"均匀覆盖整段视频"。
@@ -566,62 +392,9 @@ def get_uniform_frame_indices(total_num_frames: int, num_frames: int | None = No
 
 同一个决策在视频处理器里还有一份 torch 实现：
 
-<!-- src: video_processing_utils.py -->
-```python
-    def sample_frames(
-        self,
-        metadata: VideoMetadata,
-        num_frames: int | None = None,
-        fps: int | float | None = None,
-        **kwargs,
-    ):
-        """
-        Default sampling function which uniformly samples the desired number of frames between 0 and total number of frames.
-        If `fps` is passed along with metadata, `fps` frames per second are sampled uniformly. Arguments `num_frames`
-        and `fps` are mutually exclusive.
-
-        Args:
-            metadata (`VideoMetadata`):
-                Metadata of the video containing information about total duration, fps and total number of frames.
-            num_frames (`int`, *optional*):
-                Maximum number of frames to sample. Defaults to `self.num_frames`.
-            fps (`int` or `float`, *optional*):
-                Target frames to sample per second. Defaults to `self.fps`.
-
-        Returns:
-            np.ndarray:
-                Indices to sample video frames.
-        """
-        if fps is not None and num_frames is not None:
-            raise ValueError(
-                "`num_frames`, `fps`, and `sample_indices_fn` are mutually exclusive arguments, please use only one!"
-            )
-
-        num_frames = num_frames if num_frames is not None else self.num_frames
-        fps = fps if fps is not None else self.fps
-        total_num_frames = metadata.total_num_frames
-
-        # If num_frames is not given but fps is, calculate num_frames from fps
-        if num_frames is None and fps is not None:
-            if metadata is None or metadata.fps is None:
-                raise ValueError(
-                    "Asked to sample `fps` frames per second but no video metadata was provided which is required when sampling with `fps`. "
-                    "Please pass in `VideoMetadata` object or use a fixed `num_frames` per input video"
-                )
-            num_frames = int(total_num_frames / metadata.fps * fps)
-
-        if num_frames > total_num_frames:
-            raise ValueError(
-                f"Video can't be sampled. The `num_frames={num_frames}` exceeds `total_num_frames={total_num_frames}`. "
-            )
-
-        if num_frames is not None:
-            indices = torch.arange(0, total_num_frames, total_num_frames / num_frames).int()
-        else:
-            indices = torch.arange(0, total_num_frames).int()
-        return indices
-```
-
+''')
+B("video_processing_utils.py", 135, 186)
+P('''
 **读法**：
 - 块内第 1~3 行是"三重默认"：显式参数 → 类属性 → metadata。
   `BaseVideoProcessor` 上那一排 `None` 类属性（`num_frames` / `fps` / …）
@@ -637,39 +410,9 @@ def get_uniform_frame_indices(total_num_frames: int, num_frames: int | None = No
 
 采样函数怎么被调用？看它的上一层：
 
-<!-- src: video_processing_utils.py -->
-```python
-        videos = make_batched_videos(videos)
-        video_metadata = make_batched_metadata(videos, video_metadata=video_metadata)
-
-        # Only sample frames if an array video is passed, otherwise first decode -> then sample
-        if is_valid_video(videos[0]) and do_sample_frames:
-            sampled_videos = []
-            sampled_metadata = []
-            for video, metadata in zip(videos, video_metadata):
-                indices = sample_indices_fn(metadata=metadata)
-                metadata.frames_indices = indices
-                sampled_videos.append(video[indices])
-                sampled_metadata.append(metadata)
-            videos = sampled_videos
-            video_metadata = sampled_metadata
-        elif not is_valid_video(videos[0]):
-            if isinstance(videos[0], list):
-                # Videos sometimes are passed as a list of image URLs, especially through templates
-                videos = [
-                    torch.stack([self.process_image(image) for image in images], dim=0)
-                    for images in self.fetch_images(videos)
-                ]
-                if do_sample_frames:
-                    raise ValueError(
-                        "Sampling frames from a list of images is not supported! Set `do_sample_frames=False`."
-                    )
-            else:
-                videos, video_metadata = self.fetch_videos(videos, sample_indices_fn=sample_indices_fn)
-
-        return videos, video_metadata
-```
-
+''')
+B("video_processing_utils.py", 198, 226)
+P('''
 **读法**：
 - 块内第 1~2 行把"视频"和"元数据"都先**拍平成一个列表** ——
   因为后面两支分支（已是数组 / 需要解码）都要能按下标配对。
@@ -683,23 +426,9 @@ def get_uniform_frame_indices(total_num_frames: int, num_frames: int | None = No
 
 帧索引留下来干什么？时间戳是后面 mrope 要用的：
 
-<!-- src: video_utils.py -->
-```python
-    @property
-    def timestamps(self) -> list[float]:
-        "Timestamps of the sampled frames in seconds."
-        if self.fps is None or self.frames_indices is None:
-            raise ValueError("Cannot infer video `timestamps` when `fps` or `frames_indices` is None.")
-        return [frame_idx / self.fps for frame_idx in self.frames_indices]
-
-    @property
-    def sampled_fps(self) -> float:
-        "FPS of the sampled video."
-        if self.frames_indices is None or self.total_num_frames is None or self.fps is None:
-            return self.fps or 24
-        return len(self.frames_indices) / self.total_num_frames * self.fps
-```
-
+''')
+B("video_utils.py", 101, 113)
+P('''
 **读法**：
 - `VideoMetadata` 带着原始 `fps` 和**实际抽到的** `frames_indices`，
   于是 `timestamps` 可以精确还原每一帧在原视频里的秒数 ——
@@ -717,18 +446,9 @@ def get_uniform_frame_indices(total_num_frames: int, num_frames: int | None = No
 视频切块比图像多一维：`(B, T, C, H, W)`。多出来的 `T` 会被折进
 **patch 的宽度**，而不是变成新的 token：
 
-<!-- src: models/glm5_next/video_processing_glm5_next.py -->
-```python
-        # Check that videos have `num_frames` divisible by `temporal_patch_size`
-        if pad := -num_frames % temporal_patch_size:
-            repeats = videos[:, -1:].expand(-1, pad, -1, -1, -1)
-            videos = torch.cat((videos, repeats), dim=1)
-            num_frames += pad
-
-        grid_t = num_frames // temporal_patch_size
-        grid_h, grid_w = resized_height // patch_size, resized_width // patch_size
-```
-
+''')
+B("models/glm5_next/video_processing_glm5_next.py", 325, 332)
+P('''
 > **边界声明**：此块属于 L2-06 覆盖域，**不计入本课覆盖率**。
 
 **读法**：
@@ -783,18 +503,9 @@ def get_uniform_frame_indices(total_num_frames: int, num_frames: int | None = No
 （`repeat_interleave` / `.tolist()` / 循环）。所以这个文件把它们统一成
 "算一次、存起来、下次 pop 出来"的形式。
 
-<!-- src: vision_utils.py -->
-```python
-    if kwargs is not None and (cu_seqlens := kwargs.pop("cu_seqlens", None)) is not None:
-        return cu_seqlens
-    dtype = grid_thw.dtype if torch.jit.is_tracing() else torch.int32
-    if merge_temporal:
-        seqlens = grid_thw[:, 0] * grid_thw[:, 1] * grid_thw[:, 2]
-    else:
-        seqlens = torch.repeat_interleave(grid_thw[:, 1] * grid_thw[:, 2], grid_thw[:, 0])
-    return F.pad(seqlens.cumsum(dim=0, dtype=dtype), (1, 0), value=0)
-```
-
+''')
+B("vision_utils.py", 58, 65)
+P('''
 **读法**：
 - 块内第 1 行是贯穿整个文件的**模式**：`kwargs.pop("cu_seqlens", None)`。
   有预算好的就直接返回，并且**顺手把它从 kwargs 里删掉**
@@ -807,31 +518,9 @@ def get_uniform_frame_indices(total_num_frames: int, num_frames: int | None = No
 
 位置编号同理，而且能直接看出 merge 分组：
 
-<!-- src: vision_utils.py -->
-```python
-    device = grid_thw.device
-    if isinstance(spatial_merge_size, int):
-        spatial_merge_size = torch.tensor([spatial_merge_size], device=device).expand(len(grid_thw))
-
-    position_ids = []
-    for (t, h, w), merge_size in zip(grid_thw.tolist(), spatial_merge_size.tolist()):
-        hpos_ids, wpos_ids = torch.meshgrid(
-            torch.arange(h, device=device),
-            torch.arange(w, device=device),
-            indexing="ij",
-        )
-        block_shape = (h // merge_size, merge_size, w // merge_size, merge_size)
-        hpos_ids = hpos_ids.reshape(block_shape).transpose(1, 2).flatten()
-        wpos_ids = wpos_ids.reshape(block_shape).transpose(1, 2).flatten()
-        if include_temporal:
-            tpos_ids = torch.arange(t, device=device).repeat_interleave(h * w)
-            position_ids.append(torch.stack([tpos_ids, hpos_ids.repeat(t), wpos_ids.repeat(t)], dim=-1))
-        else:
-            position_ids.append(torch.stack([hpos_ids, wpos_ids], dim=-1).repeat(t, 1))
-
-    return torch.cat(position_ids, dim=0)
-```
-
+''')
+B("vision_utils.py", 107, 127)
+P('''
 **读法**：
 - 块内第 2 行 `torch.meshgrid(arange(h), arange(w), indexing="ij")` 造出
   每个 patch 的 `(行号, 列号)`。
@@ -852,26 +541,9 @@ def get_uniform_frame_indices(total_num_frames: int, num_frames: int | None = No
 把原始信号切成固定长度的帧、投到一个"感知上均匀"的基上、
 再取对数压缩动态范围。看它的最后一步就明白了：
 
-<!-- src: audio_utils.py -->
-```python
-    if reference <= 0.0:
-        raise ValueError("reference must be greater than zero")
-    if min_value <= 0.0:
-        raise ValueError("min_value must be greater than zero")
-
-    reference = max(min_value, reference)
-
-    spectrogram = np.clip(spectrogram, a_min=min_value, a_max=None)
-    spectrogram = 10.0 * (np.log10(spectrogram) - np.log10(reference))
-
-    if db_range is not None:
-        if db_range <= 0.0:
-            raise ValueError("db_range must be greater than zero")
-        spectrogram = np.clip(spectrogram, a_min=spectrogram.max() - db_range, a_max=None)
-
-    return spectrogram
-```
-
+''')
+B("audio_utils.py", 1362, 1377)
+P('''
 **读法**：
 - 对应到视觉侧：`10*log10` ↔ `normalize` 的 `(x-mean)/std`，
   都是**把量纲压到模型好学的范围**。
@@ -887,15 +559,9 @@ def get_uniform_frame_indices(total_num_frames: int, num_frames: int | None = No
 
 mel 矩阵本身怎么造出来？五行：
 
-<!-- src: audio_utils.py -->
-```python
-    # center points of the triangular mel filters
-    mel_min = hertz_to_mel(min_frequency, mel_scale=mel_scale)
-    mel_max = hertz_to_mel(max_frequency, mel_scale=mel_scale)
-    mel_freqs = np.linspace(mel_min, mel_max, num_mel_filters + 2)
-    filter_freqs = mel_to_hertz(mel_freqs, mel_scale=mel_scale)
-```
-
+<!-- src: audio_utils.py -->''')
+B("audio_utils.py", 798, 802)
+P('''
 **读法**：
 - `np.linspace(mel_min, mel_max, num_mel_filters + 2)` —— **在 mel 刻度上等分**，
   不是在线性频率上等分。低频率因此拿到更密的滤波器，
@@ -952,4 +618,9 @@ mel 矩阵本身怎么造出来？五行：
 > 视觉 token 数不是"算出来的魔法"，而是
 > `T * H * W / (p * p * merge_size²)` —— 336×336 单帧就是 **576 / 4 = 144**；
 > 视频则先把 `T` 帧按 `temporal_patch_size` 折成 `grid_t`，
-> **所以帧数必须是 temporal_patch_size 的整数倍**，不是就补最后一帧。
+> **所以帧数必须是 temporal_patch_size 的整数倍**，不是就补最后一帧。''')
+
+os.makedirs(os.path.dirname(OUT), exist_ok=True)
+with io.open(OUT, "w", encoding="utf-8") as f:
+    f.write("\n".join(PARTS))
+print("wrote", OUT, os.path.getsize(OUT), "bytes")

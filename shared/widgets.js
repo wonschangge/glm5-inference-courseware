@@ -27,7 +27,11 @@ const W = {
   /* ======================================================================
      卡片
      ====================================================================== */
-  card(o = {}) {
+  /* card(o, kids?) —— kids 是可选的位置参数。
+     ★ 之前只接受一个对象，写成 W.card({...}, [table]) 时第二参被**静默忽略**，
+       卡片变成空壳，而四道门禁没有一条会报错（空卡片不溢出、不报 JS 错误）。
+       子代理实际踩到了这个坑，所以这里显式支持位置参数。 */
+  card(o = {}, extraKids = null) {
     const cls = ['card'];
     if (o.cc != null) cls.push('cc' + U.ci(o.cc));
     if (o.tint != null) cls.push('tint' + U.ci(o.tint));
@@ -43,7 +47,10 @@ const W = {
     }
     if (o.sub != null) e.appendChild(U.el('div', { class: 'cs', html: o.sub }));
     if (o.body) e.appendChild(o.body);
-    if (o.kids) (Array.isArray(o.kids) ? o.kids : [o.kids]).forEach(k => k && e.appendChild(k));
+    const all = [];
+    if (o.kids) all.push(...(Array.isArray(o.kids) ? o.kids : [o.kids]));
+    if (extraKids) all.push(...(Array.isArray(extraKids) ? extraKids : [extraKids]));
+    all.forEach(k => k && e.appendChild(k));
     return e;
   },
 

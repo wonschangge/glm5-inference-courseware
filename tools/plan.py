@@ -238,7 +238,7 @@ dict(id="L2-06", layer="L2", prio="P0",
      accept=["能写出一次图像对话的 inputs 字典有哪些 key"]),
 
 dict(id="L2-07", layer="L2", prio="P0",
-     title="视觉塔：从 336x336 像素到 27 个 token",
+     title="视觉塔：从 336x336 像素到 144 个 token",
      files=["models/glm5_next/modeling_glm5_next.py", "backbone_utils.py",
             "utils/backbone_utils.py"],
      points=["patch embed 的卷积等价形式",

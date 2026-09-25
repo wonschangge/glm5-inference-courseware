@@ -1,11 +1,11 @@
 /* ==========================================================================
-   L2-07 · 视觉塔：从 336x336 像素到 27 个 token
+   L2-07 · 视觉塔：从 336x336 像素到 144 个 token
    --------------------------------------------------------------------------
    覆盖：models/glm5_next/modeling_glm5_next.py, backbone_utils.py,
          utils/backbone_utils.py（3 个文件 / 2850 行）
    目标：看完能手算一张图产出多少视觉 token（144），并说清轴向 RoPE 与一维 RoPE 的差别。
    排版基准：#visual 可视区 = 994 x 662.7 舞台像素（无头浏览器实测）。
-   ★ 实测订正：课程标题里的「27 个 token」与源码不符 —— 实测是 144。见第 3 幕。
+   ★ 实测订正：常见资料（含本课件的第一版）写「27 个 token」，实测是 144。见第 3 幕。
    ========================================================================== */
 'use strict';
 
@@ -24,7 +24,7 @@ const SCENES = [
   kicker: 'L2 · 输入流水线 · 全景',
   title: '一张图进塔，<span class="hl-a">144</span> 个 token 出来',
   sub: '336x336 的 RGB 图 → 24x24 个 patch 位置（576）→ 每 2x2 合并成 1 个 → 144 个 1536 维向量。',
-  caption: '★ 课程标题写的是「27 个 token」—— 与源码不符，实测是 144，证据在第三幕。',
+  caption: '★ 常见资料写「27 个 token」—— 实测是 144，证据在第三幕。',
   lang: 'python',
   codeStart: 1857,
   code: `        position_ids = get_vision_position_ids(grid_thw, self.spatial_merge_size, kwargs=kwargs)

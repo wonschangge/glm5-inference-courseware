@@ -100,7 +100,7 @@ class ClassInstantier(OrderedDict):
 | `hidden_size` | 4096 | 主干宽度 |
 | `intermediate_size` | 12288 | 稠密 MLP 中间维 = 3 × 4096 |
 | 稠密 MLP 参数量 | 150,994,944 | ≈ 151.0M，零偏置 |
-| 一个稀疏层 MLP 参数量 | 7,274,102,784 | ≈ 7.27B（存储） |
+| 一个稀疏层（MoE）参数量 | 7,274,102,784 | ≈ 7.27B（含 25.2M 共享专家 + 1.18M 路由） |
 | 每 token 激活 | 226,492,416 | ≈ 226.5M → 存储/激活 = 32.0× |
 | `swiglu_limit` | 10.0 | 文本侧与视觉侧相同 |
 | `hidden_act` | `"silu"` | → `ACT2FN["silu"]` → `SiLUActivation` |

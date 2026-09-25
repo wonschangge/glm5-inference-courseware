@@ -32,26 +32,7 @@ const SCENES = [
   caption: '回顾 L0-01：45 层循环里每层返回 (hidden_states, topk_indices)。本课把"一层之内"彻底拆开。',
   lang: 'python',
   codeStart: 1280,
-  code: `class Glm5NextTextDecoderLayer(GradientCheckpointingLayer):
-    def __init__(self, config: Glm5NextTextConfig, layer_idx: int):
-        super().__init__()
-        self.block_type = config.layer_types[layer_idx]
-        self.hidden_size = config.hidden_size
-        self.self_attn = (
-            Glm5NextTextLinearAttention(config, layer_idx)
-            if self.block_type == "linear_attention"
-            else Glm5NextTextAttention(config, layer_idx)
-        )
-
-        self.mlp = (
-            Glm5NextTextMoE(config) if config.mlp_layer_types[layer_idx] == "sparse" else Glm5NextTextMLP(config)
-        )
-
-        self.input_layernorm = Glm5NextTextRMSNorm(config.hidden_size, config.rms_norm_eps)
-        self.post_attention_layernorm = Glm5NextTextRMSNorm(config.hidden_size, config.rms_norm_eps)
-
-        self.attn_hc = Glm5NextTextHyperConnection(config)
-        self.ffn_hc = Glm5NextTextHyperConnection(config)`,
+  code: `@@B:glm5:1280:1299@@`,
   codeNote: 'Glm5NextTextDecoderLayer —— 三个子块的清单：self_attn / mlp / attn_hc / ffn_hc，加两个 norm。',
   duration: 18000,
   build(root, tl) {
@@ -158,13 +139,7 @@ const SCENES = [
   caption: '回顾 L3-06：mHC 内部自带一个 0 参数的 unweighted RMSNorm，所以"权重不归一化"不是疏忽。',
   lang: 'python',
   codeStart: 1312,
-  code: `        dtype = hidden_states.dtype
-
-        residual = hidden_states
-        post, comb, hidden_states = self.attn_hc(hidden_states)
-        # Self attn
-        hidden_states = self.input_layernorm(hidden_states)
-        topk_indices = None`,
+  code: `@@B:glm5:1312:1318@@`,
   codeNote: 'Glm5NextTextDecoderLayer.forward 的前 6 行 —— 顺序与形状都在这里。',
   duration: 16000,
   build(root, tl) {
@@ -269,9 +244,7 @@ const SCENES = [
   caption: '验收点 2 的答案在本幕：residual 在 mHC 下是门控 + 流间混合，不是一条加法。',
   lang: 'python',
   codeStart: 1337,
-  code: `        hidden_states = post.to(dtype).unsqueeze(-1) * hidden_states.unsqueeze(-2) + torch.matmul(
-            comb.to(dtype).transpose(-1, -2), residual
-        )`,
+  code: `@@B:glm5:1337:1339@@`,
   codeNote: '两行张量运算，就是全部残差逻辑 —— 它不在任何子模块里。',
   duration: 16000,
   build(root, tl) {
@@ -357,10 +330,7 @@ const SCENES = [
   caption: '回顾 L3-06：mHC 的全部可学参数就是 fn / base / scale 三个。',
   lang: 'python',
   codeStart: 314,
-  code: `        # All weights are computed with a one layer perceptron. For pre and post, this is it.
-        pre = torch.sigmoid(pre_w * pre_scale + pre_b) + self.hc_eps
-        post = 2 * torch.sigmoid(post_w * post_scale + post_b)
-        comb = torch.softmax(comb_w * comb_scale + comb_b, dim=-1) + self.hc_eps`,
+  code: `@@B:glm5:314:317@@`,
   codeNote: 'Glm5NextTextHyperConnection.forward 的三个权重 —— 一行一条。',
   duration: 16000,
   build(root, tl) {
@@ -434,14 +404,7 @@ const SCENES = [
   caption: '本幕是本课的数值幕：手算一个 2x2，再拿真实 4x4 的实测偏差对照。',
   lang: 'python',
   codeStart: 319,
-  code: `        # The comb weight is a bit different: it dictates how the input streams (In) are added to the output streams
-        # (Out) in this way: Mixed = In @ Comb + Out. To make sure the norm of "Mixed" does not blow up, we constrain
-        # the comb weight to be doubly-stochastic (ie. its rows and columns must sum to 1) with a few iterations of the
-        # Sinkhorn-Knopp algorithm, which iteratively normalizes the rows and columns to sum to 1.
-        comb = comb / (comb.sum(dim=-2, keepdim=True) + self.hc_eps)
-        for _ in range(self.hc_sinkhorn_iters - 1):
-            comb = comb / (comb.sum(dim=-1, keepdim=True) + self.hc_eps)
-            comb = comb / (comb.sum(dim=-2, keepdim=True) + self.hc_eps)`,
+  code: `@@B:glm5:319:326@@`,
   codeNote: 'Sinkhorn-Knopp：先列归一，再循环 (hc_sinkhorn_iters - 1) 次「行、列」。',
   duration: 18000,
   build(root, tl) {
@@ -529,16 +492,7 @@ const SCENES = [
   caption: '回顾 L0-05：mHC 在每个子层前后各出现一次 —— 这个"各出现一次"就是本幕的代码形态。',
   lang: 'python',
   codeStart: 1341,
-  code: `        residual = hidden_states
-        post, comb, hidden_states = self.ffn_hc(hidden_states)
-        # Feed forward
-        hidden_states = self.post_attention_layernorm(hidden_states)
-        hidden_states = self.mlp(hidden_states)
-        hidden_states = post.to(dtype).unsqueeze(-1) * hidden_states.unsqueeze(-2) + torch.matmul(
-            comb.to(dtype).transpose(-1, -2), residual
-        )
-
-        return hidden_states, topk_indices`,
+  code: `@@B:glm5:1341:1350@@`,
   codeNote: 'Glm5NextTextDecoderLayer.forward 的后半段 —— 与前半段逐行同构。',
   duration: 16000,
   build(root, tl) {
@@ -615,14 +569,7 @@ const SCENES = [
   caption: '回顾 L3-05：路由的分组细节在那一课；这里只看它在装配里的位置与裁剪手算。',
   lang: 'python',
   codeStart: 201,
-  code: `    def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
-        residuals = hidden_states
-        orig_shape = hidden_states.shape
-        _, topk_weights, topk_indices = self.gate(hidden_states)
-        hidden_states = hidden_states.view(-1, hidden_states.shape[-1])
-        hidden_states = self.experts(hidden_states, topk_indices, topk_weights).view(*orig_shape)
-        hidden_states = hidden_states + self.shared_experts(residuals)
-        return hidden_states`,
+  code: `@@B:glm5:201:208@@`,
   codeNote: 'Glm5NextTextMoE.forward —— 内部还有一次残差：稀疏专家 + 共享专家。',
   duration: 17000,
   build(root, tl) {
@@ -695,41 +642,7 @@ const SCENES = [
   caption: '本幕只讲推理侧：所有 checkpoint 的复杂度都留在训练侧，推理路径上它退化成 nn.Module。',
   lang: 'python',
   codeStart: 76,
-  code: `    gradient_checkpointing = False
-    # Layers that only read the KV cache can set this to keep it under gradient checkpointing (the recompute reads the
-    # same states). Writers must leave it \`False\`, otherwise the cache is updated a second time on the backward replay.
-    _can_checkpoint_with_cache = False
-
-    def __call__(self, *args, **kwargs):
-        if self.gradient_checkpointing and self.training:
-            do_warn = False
-            layer_name = self.__class__.__name__
-            message = f"Caching is incompatible with gradient checkpointing in {layer_name}. Setting"
-
-            if "use_cache" in kwargs and kwargs["use_cache"]:
-                kwargs["use_cache"] = False
-                message += " \`use_cache=False\`,"
-                do_warn = True
-
-            if not self._can_checkpoint_with_cache:
-                # different names for the same thing in different layers
-                if "past_key_values" in kwargs and kwargs["past_key_values"] is not None:
-                    kwargs["past_key_values"] = None
-                    message += " \`past_key_values=None\`,"
-                    do_warn = True
-
-                if "layer_past" in kwargs and kwargs["layer_past"] is not None:
-                    kwargs["layer_past"] = None
-                    message += " \`layer_past=None\`,"
-                    do_warn = True
-
-            # warn if anything was changed
-            if do_warn:
-                message = message.rstrip(",") + "."
-                logger.warning_once(message)
-
-            return self._gradient_checkpointing_func(partial(super().__call__, **kwargs), *args)
-        return super().__call__(*args, **kwargs)`,
+  code: `@@B:layers:76:110@@`,
   codeNote: 'modeling_layers.py 的 GradientCheckpointingLayer —— 解码层的基类，全文只有这两段。',
   duration: 17000,
   build(root, tl) {
@@ -816,11 +729,7 @@ const SCENES = [
   caption: '下一课 L4-01：为什么要混合两种注意力 —— 34 层 KDA 与 11 层 MLA+DSA 的分工。',
   lang: 'python',
   codeStart: 345,
-  code: `    last_hidden_state: torch.FloatTensor | None = None
-    past_key_values: Cache | None = None
-    hidden_states: tuple[torch.FloatTensor, ...] | None = None
-    attentions: tuple[torch.FloatTensor, ...] | None = None
-    router_logits: tuple[torch.FloatTensor] | None = None`,
+  code: `@@B:outputs:345:349@@`,
   codeNote: 'MoeModelOutputWithPast 的字段 —— 主干 forward 最后一行构造的就是它。',
   duration: 18000,
   build(root, tl) {

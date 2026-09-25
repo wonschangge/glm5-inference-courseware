@@ -1,4 +1,25 @@
-/* ==========================================================================
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""L3-01 lesson.js 生成器：code 字段一律从源文件按行切片注入，绝不手抄。"""
+import os
+import re
+
+UP = "/data/WORKSPACE/transformer-project/upstream-transformers/src/transformers"
+M = "models/glm5_next/modeling_glm5_next.py"
+P = "pytorch_utils.py"
+OUT = "/data/WORKSPACE/transformer-project/courseware/L3-backbone/L3-01/lesson.js"
+
+_cache = {}
+
+
+def sl(rel, a, b):
+    if rel not in _cache:
+        with open(os.path.join(UP, rel), encoding="utf-8") as f:
+            _cache[rel] = f.read().split("\n")
+    return "\n".join(_cache[rel][a - 1:b])
+
+
+JS = r'''/* ==========================================================================
    L3-01 · 三种 RMSNorm
    --------------------------------------------------------------------------
    覆盖：models/glm5_next/modeling_glm5_next.py（2444 行）
@@ -28,15 +49,7 @@ const SCENES = [
   caption: '本课以算子为单位：先看形态，再看每一种形态被谁需要。回顾 L0-01：那一课把 45 层压成一张图，这一课开始拆图里的一块。',
   lang: 'python',
   codeStart: 66,
-  code: `@use_kernel_forward_from_hub("RMSNorm")
-class Glm5NextTextRMSNorm(nn.Module):
-    def __init__(self, hidden_size, eps: float = 1e-6) -> None:
-        """
-        Glm5NextTextRMSNorm is equivalent to T5LayerNorm
-        """
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps`,
+  code: `@@M:66:74@@`,
   codeNote: 'Glm5NextTextRMSNorm —— 加权版。三类里最常见的一个，主干里 113 个实例。',
   duration: 18000,
   build(root, tl) {
@@ -128,15 +141,7 @@ class Glm5NextTextRMSNorm(nn.Module):
   caption: '回顾 L0-01：hidden_states 是 (batch, seq, 4096)；这一行 mean(-1) 把最后那维压成一个数。',
   lang: 'python',
   codeStart: 76,
-  code: `    def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
-        input_dtype = hidden_states.dtype
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        return self.weight * hidden_states.to(input_dtype)
-
-    def extra_repr(self):
-        return f"{tuple(self.weight.shape)}, eps={self.variance_epsilon}"`,
+  code: `@@M:76:84@@`,
   codeNote: 'Glm5NextTextRMSNorm.forward —— 三个精度约定全在这五行里。',
   duration: 20000,
   build(root, tl) {
@@ -206,13 +211,7 @@ class Glm5NextTextRMSNorm(nn.Module):
   caption: '验收点一：「无权重版本用于只需要尺度、不需要方向的场合」—— 下一幕看那个场合具体在哪。',
   lang: 'python',
   codeStart: 211,
-  code: `class Glm5NextTextUnweightedRMSNorm(nn.Module):
-    def __init__(self, eps: float = 1.0e-6):
-        super().__init__()
-        self.eps = eps
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x * torch.rsqrt(x.float().square().mean(-1, keepdim=True) + self.eps).to(x.dtype)`,
+  code: `@@M:211:217@@`,
   codeNote: '整个类只有两行有效代码：__init__ 存一个 eps，forward 一行算完。',
   duration: 18000,
   build(root, tl) {
@@ -284,9 +283,7 @@ class Glm5NextTextRMSNorm(nn.Module):
   caption: '回顾 L0-01 第五节：hidden_states 一开始就是 (batch, seq, 4, 4096)。展开见 L3-06。',
   lang: 'python',
   codeStart: 276,
-  code: `        self.hc_sinkhorn_iters = config.hc_sinkhorn_iters
-        self.hc_eps = config.hc_eps
-        self.input_norm = Glm5NextTextUnweightedRMSNorm(eps=config.rms_norm_eps)`,
+  code: `@@M:276:278@@`,
   codeNote: '全模型唯一一处实例化无权重版的地方。',
   duration: 20000,
   build(root, tl) {
@@ -378,28 +375,7 @@ class Glm5NextTextRMSNorm(nn.Module):
   caption: '验收点二的答案在这一幕与下一幕：门控范数给 KDA 的读出加了「与内容相关的闸门」。',
   lang: 'python',
   codeStart: 374,
-  code: `# NOTE: the FLA package does not re-cast to \`input_dtype\` in its implementation, maybe we should do the same
-@use_kernel_forward_from_hub("RMSNormGated")
-class Glm5NextTextRMSNormGated(nn.Module):
-    def __init__(self, hidden_size, eps=1e-6, **kwargs) -> None:
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps
-        self.activation = "sigmoid"
-
-    def forward(self, hidden_states, gate=None) -> torch.Tensor:
-        input_dtype = hidden_states.dtype
-
-        # Strict FP32 norm (do not downcast on the weights)
-        hidden_states = hidden_states.to(torch.float32)
-        variance = hidden_states.pow(2).mean(-1, keepdim=True)
-        hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)
-        hidden_states = self.weight.to(torch.float32) * hidden_states
-
-        # Apply gating
-        hidden_states = hidden_states * ACT2FN[self.activation](gate.to(torch.float32))
-
-        return hidden_states.to(input_dtype)`,
+  code: `@@M:374:395@@`,
   codeNote: '注意 self.activation = "sigmoid" 是硬编码字符串，不是 config 项；两处 .to(torch.float32) 是刻意的。',
   duration: 20000,
   build(root, tl) {
@@ -484,10 +460,7 @@ class Glm5NextTextRMSNormGated(nn.Module):
   caption: '这一块回答验收点二。KDA 的递推展开见 L4-02 ~ L4-05；门的瓶颈宽度为什么取 head_dim 也在那里讲。',
   lang: 'python',
   codeStart: 766,
-  code: `        # Final gated norm and proj
-        gate = self.g_b_proj(self.g_a_proj(hidden_states)).view(hidden_shape)
-        output = self.o_norm(core_attn_out, gate).reshape(batch_size, seq_len, -1)
-        output = self.o_proj(output)`,
+  code: `@@M:766:769@@`,
   codeNote: '两路输入、一个出口：core_attn_out（记忆读出）× sigmoid(gate)（当前输入算出的闸门）。',
   duration: 20000,
   build(root, tl) {
@@ -572,13 +545,7 @@ class Glm5NextTextRMSNormGated(nn.Module):
   caption: '回顾 L1-02 / L1-03：rms_norm_eps 就写在 config 里（1e-5）。configuration_glm5_next.py 不计入本课覆盖率，只作实测证据。',
   lang: 'python',
   codeStart: 1435,
-  code: `        self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
-        self.layers = nn.ModuleList(
-            [Glm5NextTextDecoderLayer(config, layer_idx) for layer_idx in range(config.num_hidden_layers)]
-        )
-        self.norm = Glm5NextTextRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
-        self.gradient_checkpointing = False
-        self.hc_head = Glm5NextTextHyperHead()`,
+  code: `@@M:1435:1441@@`,
   codeNote: '出口的 norm 也显式传了 eps=config.rms_norm_eps —— 位置参数与关键字参数两种写法，传的是同一个东西。',
   duration: 20000,
   build(root, tl) {
@@ -650,8 +617,7 @@ class Glm5NextTextRMSNormGated(nn.Module):
   caption: '这一幕用到 pytorch_utils.py 的 ALL_LAYERNORM_LAYERS 与 apply_chunking_to_forward（同属本课覆盖的两个文件之一）。',
   lang: 'python',
   codeStart: 1295,
-  code: `        self.input_layernorm = Glm5NextTextRMSNorm(config.hidden_size, config.rms_norm_eps)
-        self.post_attention_layernorm = Glm5NextTextRMSNorm(config.hidden_size, config.rms_norm_eps)`,
+  code: `@@M:1295:1296@@`,
   codeNote: '每个解码层两个加权 norm —— 90 个实例就是这么来的（45 x 2）。',
   duration: 19000,
   build(root, tl) {
@@ -719,15 +685,7 @@ class Glm5NextTextRMSNormGated(nn.Module):
   caption: '下一课 L3-02：SwiGLU 的 gate/up/down 与 swiglu_limit 截断 —— 又一个「限制幅度」的设计。',
   lang: 'python',
   codeStart: 1558,
-  code: `@use_kernel_forward_from_hub("RMSNorm")
-class Glm5NextRMSNorm(nn.Module):
-    def __init__(self, hidden_size, eps: float = 1e-6) -> None:
-        """
-        Glm5NextRMSNorm is equivalent to T5LayerNorm
-        """
-        super().__init__()
-        self.weight = nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon = eps`,
+  code: `@@M:1558:1566@@`,
   codeNote: '第四个类：与 Glm5NextTextRMSNorm 逐字相同的那 17 行（实测 a == b 为 True）。',
   duration: 20000,
   build(root, tl) {
@@ -774,3 +732,18 @@ class Glm5NextRMSNorm(nn.Module):
 },
 
 ];
+'''
+
+n = 0
+def repl(m):
+    global n
+    n += 1
+    rel, a, b = m.group(1), int(m.group(2)), int(m.group(3))
+    txt = sl(M if rel == "M" else P, a, b)
+    # 注入到 JS 模板字面量里：转义反斜杠、反引号与 ${，运行时字符串仍是逐字原文
+    return txt.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
+
+out = re.sub(r"@@(M|P):(\d+):(\d+)@@", repl, JS)
+with open(OUT, "w", encoding="utf-8") as f:
+    f.write(out)
+print("wrote", OUT, len(out.split("\n")), "lines,", n, "code slices injected")

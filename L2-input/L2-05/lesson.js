@@ -147,7 +147,7 @@ const SCENES = [
         resized_image = rescale(resized_image, 1 / 255) if do_rescale else resized_image
     return resized_image`,
   codeNote: 'image_transforms.resize 的尾段：numpy → PIL → resize → numpy，量纲要记账。',
-  duration: 18000,
+  duration: 19000,
   build(root, tl) {
     const wrap = U.el('div', { class: 'col gap14', style: 'width:100%;height:100%' });
     root.appendChild(wrap);
@@ -221,25 +221,28 @@ const SCENES = [
     right._els.forEach(e => { e.style.opacity = '.25'; });
     msg.innerHTML = '<span class="cm">// 左边那份：形状不变，但数值往返了一趟 uint8</span>';
     left._els.forEach((e, i) => {
-      tl.at(1500 + i * 1600, () => {
+      tl.at(1800 + i * 2000, () => {
         left._els.forEach(x => { x.style.opacity = '.25'; });
         e.style.opacity = '1';
         e.style.borderColor = 'var(--c0)';
-        msg.innerHTML = '左路第 <em>' + (i + 1) + '</em> 步 &nbsp;<span class="cm">// 6 步里有 3 步在"转格式"</span>';
+        msg.innerHTML = '左路第 <em>' + (i + 1) + '</em> 步 &nbsp;<span class="cm">// 4 步里有 2 步在"转格式"</span>';
       });
     });
-    tl.at(11400, () => {
+    tl.at(9800, () => {
       left._els.forEach(e => { e.style.borderColor = 'rgba(150,180,255,.16)'; });
       msg.innerHTML = '右路（PIL 版）：同一次 resize，<em>只有 2 步是真的在做尺寸</em>';
     });
-    tl.at(13400, () => {
+    tl.at(12000, () => {
       right._els.forEach((e, i) => {
-        if (i === 3 || i === 4) { e.style.opacity = '1'; e.style.borderColor = 'var(--c4)'; }
+        if (i === 1 || i === 2) { e.style.opacity = '1'; e.style.borderColor = 'var(--c4)'; }
       });
       msg.innerHTML = '★ <em>short == 目标就提前 return</em> —— 重采样是纯损失，能不做就不做';
     });
-    tl.at(15600, () => {
+    tl.at(14500, () => {
       right._els.forEach(e => { e.style.opacity = '1'; e.style.borderColor = 'rgba(150,180,255,.16)'; });
+      msg.innerHTML = '★ 分组的意义：<em>不同尺寸的图不能堆在同一个张量里</em>（下一幕用 grid 数证明）';
+    });
+    tl.at(16800, () => {
       msg.innerHTML = '<span class="cm">// 记住：同名函数分两份，改错一个不会报错，只会悄悄换实现</span>';
     });
   },
@@ -271,7 +274,7 @@ const SCENES = [
         mean = [mean] * num_channels
     mean = np.array(mean, dtype=image.dtype)`,
   codeNote: 'image_transforms.normalize 的前半段：先定 dtype，再定广播形状。',
-  duration: 17000,
+  duration: 18000,
   build(root, tl) {
     const wrap = U.el('div', { class: 'col gap14', style: 'width:100%;height:100%' });
     root.appendChild(wrap);
@@ -309,7 +312,7 @@ const SCENES = [
     els.forEach(e => { e.card.style.opacity = '.3'; });
     msg.innerHTML = '<span class="cm">// 三种 dtype，同一条算式</span>';
     els.forEach((e, i) => {
-      tl.at(1800 + i * 2600, () => {
+      tl.at(1800 + i * 2450, () => {
         els.forEach(x => { x.card.style.opacity = '.3'; x.card.classList.remove('ac'); });
         e.card.style.opacity = '1'; e.card.classList.add('ac');
         msg.innerHTML = e.c.ok
@@ -317,14 +320,14 @@ const SCENES = [
           : '<span class="cm">// ' + e.c.t + '</span>';
       });
     });
-    tl.at(10600, () => {
+    tl.at(10000, () => {
       els.forEach(x => { x.card.style.opacity = '1'; x.card.classList.remove('ac'); });
       msg.innerHTML = 'cast 完才轮到广播：<em>mean = [mean] * num_channels</em>，标量写法被显式支持';
     });
-    tl.at(13200, () => {
+    tl.at(12600, () => {
       msg.innerHTML = '两处 <em>raise ValueError</em> 都带上了元素个数 —— 对不上就报错，不静默截断';
     });
-    tl.at(15000, () => {
+    tl.at(15200, () => {
       msg.innerHTML = '<span class="cm">// 形状一路不变：(C, H, W) 进、(C, H, W) 出</span>';
     });
   },
@@ -671,10 +674,10 @@ const SCENES = [
       const picked = (i * PICK) % TOTAL === 0;
       const e = U.el('div', {
         class: 'n sm',
-        style: 'flex:1 1 0;height:56px;border-radius:5px;display:flex;align-items:center;'
-             + 'justify-content:center;font-size:9px;'
+        style: 'flex:1 1 0;height:64px;border-radius:5px;display:flex;align-items:center;'
+             + 'justify-content:center;font-size:10px;'
              + 'border:1px solid rgba(150,180,255,.18);background:rgba(150,180,255,.06);'
-             + 'color:var(--ink-faint);transition:all .35s var(--ease-out)',
+             + 'color:var(--ink-dim);transition:height .5s var(--ease-out),background .5s,color .5s,border-color .5s',
         title: 'frame ' + i,
         text: String(i),
       });
@@ -691,27 +694,52 @@ const SCENES = [
     row.appendChild(cA); row.appendChild(cB);
     viz.appendChild(row);
 
+    const cC = W.card({ cc: 1, tint: 1, title: '算一遍：30 帧的 16fps 视频抽 6 帧',
+      sub: '<code class="inl">arange(0, 30, 30/6)</code> = <code class="inl">[0, 5, 10, 15, 20, 25]</code> —— 步长恰好整除时是"每组头一个"。' });
+    const t2 = W.table([
+      ['步长', '30 / 6 = 5.0', '整除 → 索引均匀'],
+      ['时间戳', 'idx / fps = 0, 0.167, …', '还原成原视频里的秒数'],
+      ['sampled_fps', '6 / 30 × 30 = 6.0', '模型看到的有效帧率'],
+    ], { head: ['量', '计算', '含义'] });
+    cC.appendChild(U.el('div', { style: 'width:100%;margin-top:8px' }, [t2]));
+    cC.style.width = '100%'; cC.style.opacity = '.3';
+    viz.appendChild(cC);
+
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);
 
+    const paint = (idx) => {
+      cells[idx].style.borderColor = 'var(--c4)';
+      cells[idx].style.background = 'rgba(52,211,153,.30)';
+      cells[idx].style.color = '#fff';
+      cells[idx].style.height = '88px';
+    };
     msg.innerHTML = '<span class="cm">// 先看要抽哪些帧</span>';
-    tl.at(1800, () => { cells[0].style.opacity = '1'; msg.innerHTML = '索引 <em>0</em>：从第一帧开始'; });
-    [1, 2, 3, 4, 5].forEach((k) => {
-      tl.at(1800 + k * 1500, () => {
-        const idx = k * 5;
-        cells[idx].style.borderColor = 'var(--c4)';
-        cells[idx].style.background = 'rgba(52,211,153,.30)';
-        cells[idx].style.color = '#fff';
-        cells[idx].style.height = '80px';
-        msg.innerHTML = '索引 <em>' + idx + '</em> &nbsp;<span class="cm">// 步长 30/6 = 5</span>';
+    tl.at(1800, () => {
+      /* 六个抽中的帧一起亮，靠 transition-delay 错峰 —— 一次事件，六帧依次弹起 */
+      [0, 5, 10, 15, 20, 25].forEach((idx, k) => {
+        cells[idx].style.transitionDelay = (k * 260) + 'ms';
+        paint(idx);
       });
+      msg.innerHTML = '抽中的 6 帧依次弹起 &nbsp;<span class="cm">// arange(0, 30, 5) = 0,5,10,15,20,25</span>';
     });
-    tl.at(11400, () => { cA.classList.add('ac'); msg.innerHTML = '★ 抽到的帧号<em>不是</em> 0..5，而是 0,5,10,15,20,25 —— 存的是原视频里的位置'; });
-    tl.at(14200, () => {
-      cA.classList.remove('ac'); cB.classList.add('ac');
+    tl.at(4200, () => {
+      cA.classList.add('ac'); cA.style.opacity = '1';
+      msg.innerHTML = '★ 抽到的帧号<em>不是</em> 0..5，而是 0,5,10,15,20,25 —— 存的是原视频里的位置';
+    });
+    tl.at(6600, () => {
+      cA.classList.remove('ac'); cB.classList.add('ac'); cB.style.opacity = '1';
       msg.innerHTML = '★ 所以 <em>sampled_fps</em> 远小于原始 fps：模型看到的是"稀疏的时间"';
     });
-    tl.at(16800, () => {
+    tl.at(9000, () => {
+      cB.classList.remove('ac'); cC.classList.add('ac'); cC.style.opacity = '1';
+      msg.innerHTML = '三个量算一遍：<em>步长 5</em> / <em>时间戳 = idx / fps</em> / <em>sampled_fps = 6</em>';
+    });
+    tl.at(11400, () => {
+      [cA, cB, cC].forEach(c => { c.style.opacity = '1'; c.classList.remove('ac'); });
+      msg.innerHTML = '★ 采样是有损的：<em>模型看到的时间密度和原始视频不同</em>，必须留档';
+    });
+    tl.at(13800, () => {
       msg.innerHTML = '<span class="cm">// 抽完帧才轮到 temporal patch：帧数本身还有一条硬约束</span>';
     });
   },
@@ -884,29 +912,31 @@ const SCENES = [
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);
 
-    cEven._cells.forEach((e, i) => { e.style.opacity = i < 2 ? '1' : '.25'; });
+    cEven._cells.forEach((e, i) => { e.style.opacity = i < 2 ? '1' : '.2'; });
     msg.innerHTML = '<span class="cm">// temporal_patch_size = 2，所以两帧一组</span>';
     tl.at(1800, () => {
-      cEven._cells.forEach((e, i) => { e.style.opacity = (i < 2) ? '1' : '.25'; });
       msg.innerHTML = '第 <em>0、1</em> 帧合成一个 grid 格 &nbsp;<span class="cm">// T 被折进 patch 的宽度，不是新 token</span>';
     });
-    tl.at(4800, () => {
-      cEven._cells.forEach((e, i) => { e.style.opacity = (i >= 2 && i < 4) ? '1' : '.25'; });
+    tl.at(4200, () => {
+      cEven._cells.forEach((e, i) => { e.style.opacity = i < 4 ? '1' : '.2'; });
       msg.innerHTML = '第 <em>2、3</em> 帧 → 第 2 个 grid 格；8 帧一共 <em>4</em> 格';
     });
-    tl.at(7800, () => {
+    tl.at(6600, () => {
       cEven._cells.forEach(e => { e.style.opacity = '1'; });
       msg.innerHTML = '★ <em>grid_thw 里的 t 是 grid_t，不是原始帧数</em>：16 帧的视频 t = 8';
     });
-    tl.at(10800, () => {
+    tl.at(9000, () => {
       calc.classList.add('ac');
       msg.innerHTML = '于是 token 数是 <em>grid_t × grid_h × grid_w // merge_length</em>，不是按原始帧数算';
     });
-    tl.at(13800, () => {
+    tl.at(11400, () => {
       calc.classList.remove('ac');
       msg.innerHTML = '★ 奇数帧呢？<em>-num_frames % 2</em> = 1 → <em>重复最后一帧</em>补成偶数';
     });
-    tl.at(16400, () => {
+    tl.at(13800, () => {
+      msg.innerHTML = '★ 补的是<em>最后一帧</em>而不是补零 —— 补零会在时间维上造出一段假的"黑场"';
+    });
+    tl.at(16000, () => {
       msg.innerHTML = '<span class="cm">// 不报错、不丢帧 —— 静默补齐。这就是 temporal_patch_size=2 的要求</span>';
     });
   },
@@ -957,6 +987,15 @@ const SCENES = [
       + '真实流程里如果边不是 28 的倍数，会先补到 28 的倍数再切 —— '
       + '这就是 <code class="inl">smart_resize</code> 存在的原因。'));
 
+    viz.appendChild(U.el('div', { class: 'card', cc: 1, style: 'padding:10px 12px;width:100%' }, [
+      U.el('div', { class: 'klabel', text: '★ 本课三个数字，都可以从公式独立复算' }),
+      W.table([
+        ['336 × 336 单帧', '576 / 4', '<span class="hl3">144</span>', '图像占位符个数'],
+        ['16 帧视频', '8 × 24 × 24 / 4', '<span class="hl3">1152</span>', '每帧 72 个 token'],
+        ['patch 展平宽度', '3 × 1 × 14 × 14', '<span class="hl3">588</span>', '视觉塔的输入特征维'],
+      ], { head: ['输入', '算式', '结果', '用途'] }),
+    ]));
+
     viz.appendChild(W.exercise(
       '一个视频抽出了 <b>17</b> 帧，temporal_patch_size=2，会发生什么？'
       + '如果 temporal_patch_size 改成 4 呢？',
@@ -975,8 +1014,9 @@ const SCENES = [
     tl.at(4600, () => { msg.innerHTML = '切块<em>只改形状</em> —— 一次纯重排，不损失任何数值'; });
     tl.at(7400, () => { msg.innerHTML = '★ <em>576 / 4 = 144</em>：一个除法决定了文本序列要留多少位置'; });
     tl.at(10200, () => { msg.innerHTML = '视频多两步：<em>先采样再折时间</em>，而且两步都会丢信息，都要留档'; });
-    tl.at(13000, () => { msg.innerHTML = '★ 视频帧数必须是 <em>temporal_patch_size 的整数倍</em>，不是就补最后一帧'; });
-    tl.at(15800, () => { msg.innerHTML = '下一课 L2-06：这 144 个位置怎么和文本 token 拼成同一条序列'; });
+    tl.at(12000, () => { msg.innerHTML = '★ 视频帧数必须是 <em>temporal_patch_size 的整数倍</em>，不是就补最后一帧'; });
+    tl.at(14200, () => { msg.innerHTML = '★ 144 / 1152 / 588 三个数都能从公式独立复算 —— 这才是"读懂了"'; });
+    tl.at(16400, () => { msg.innerHTML = '下一课 L2-06：这 144 个位置怎么和文本 token 拼成同一条序列'; });
   },
 },
 

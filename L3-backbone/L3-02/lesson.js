@@ -247,7 +247,7 @@ const SCENES = [
     const msg = U.el('div', { class: 'formula', style: 'width:100%' });
     wrap.appendChild(msg);
 
-    msg.innerHTML = '<span class="cm">// 7 行里，第 3 行是注释，第 5、6 行是钳子，第 7 行才是 SwiGLU 本体</span>';
+    msg.innerHTML = '<span class="cm">// 7 行里：第 4 行是注释，第 5、6 行是钳子，第 7 行才是 SwiGLU 本体</span>';
     tl.at(2400, () => { fl.focus(2); msg.innerHTML = '<em>clamp</em> 在乘法之前 —— 这是 GLM-5 相对「教科书 SwiGLU」多出来的两步'; });
     tl.at(5800, () => { fl.focus(3); msg.innerHTML = '<span class="op">⊙</span> 是关键：<em>gate 与 up 逐元素相乘</em>，两条线性变换在这里耦合'; });
     tl.at(9200, () => {
@@ -258,7 +258,7 @@ const SCENES = [
       msg.innerHTML = '同一个 gate 若 <em>不截断</em>：SiLU(12) = 11.999926，乘 9 → <em>107.999336</em>';
     });
     tl.at(15600, () => {
-      msg.innerHTML = '<span class="cm">// 第 5 行更极端：99.995460 vs 179.998894 —— 钳子第二次都拦住了</span>';
+      msg.innerHTML = '<span class="cm">// 表格第 5 行更极端：99.995460 vs 179.998894 —— 两把钳子同时生效</span>';
     });
   },
 },
@@ -499,7 +499,7 @@ ACT2FN = ClassInstantier(ACT2CLS)`,
     wrap.appendChild(msg);
 
     msg.innerHTML = '<span class="cm">// ACT2CLS 是字典；ACT2FN 是它的实例化版本</span>';
-    tl.at(2400, () => { fl.focus(0); msg.innerHTML = '第 96 行：<em>ACT2FN[config.hidden_act]</em> —— 所有算子都从这一个字符串出发'; });
+    tl.at(2400, () => { fl.focus(0); msg.innerHTML = 'modeling 文件第 96 行：<em>ACT2FN[config.hidden_act]</em> —— 所有算子都从这一个字符串出发'; });
     tl.at(5600, () => { fl.focus(1); msg.innerHTML = '查表的结果<em>不是函数、不是字符串</em>，而是一个 nn.Module 实例'; });
     tl.at(9000, () => {
       fl.focus(-1);
@@ -648,7 +648,7 @@ ACT2FN = ClassInstantier(ACT2CLS)`,
       msg.innerHTML = '钳子的<em>位置、范围、阈值</em>三项全部相同 —— 跨模态的统一约定';
     });
     tl.at(8800, () => {
-      msg.innerHTML = '文件头写明：这份 <em>modeling_glm5_next.py</em> 由 modular 文件生成 —— 重复是管理一致性的手段';
+      msg.innerHTML = '文件头写明：这份 <em>modeling_glm5_next.py</em> 由 modular 文件<em>生成</em>（不要手改）';
     });
     tl.at(12000, () => {
       msg.innerHTML = '<span class="cm">// 图像 token 汇入主干时用的也是同一把钳子，所以主干里没有「另一种数值约定」</span>';
