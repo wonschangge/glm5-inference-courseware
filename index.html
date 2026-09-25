@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GLM-5 推理视角的 transformers 动画课件</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1222'/%3E%3Cpath d='M8 21V11h3.4l4.6 6 4.6-6H24v10h-2.8v-5.6L17 21.4h-2l-4.2-5.6V21z' fill='%2322d3ee'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="shared/theme.css">
+<style>
+
+body{overflow:auto !important}
+.pwrap{position:relative;z-index:5;max-width:1500px;margin:0 auto;padding:54px 40px 70px}
+
+/* ---------- Hero ---------- */
+.hero{margin-bottom:44px}
+.hk{font:600 12.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--accent);
+  display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.hk::before{content:"";width:26px;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),transparent)}
+.hero h1{font:700 54px/1.1 var(--sans);letter-spacing:-.02em;margin:0 0 16px;color:#fff;
+  text-shadow:0 4px 40px rgba(56,140,255,.3)}
+.hsub{font:400 16px/1.65 var(--sans);color:var(--ink-dim);max-width:930px;margin:0 0 26px}
+.hsub b{color:var(--ink)}
+.hstats{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.hs{flex:1 1 180px;padding:16px 18px;border-radius:14px;
+  background:linear-gradient(165deg,rgba(150,180,255,.09),rgba(150,180,255,.025));
+  border:1px solid var(--panel-brd);border-top:2px solid var(--cc,var(--accent));
+  box-shadow:0 12px 30px rgba(0,0,0,.32)}
+.hv{font:700 32px/1 var(--mono);color:#fff;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.hk2{font:500 12px/1.4 var(--sans);color:var(--ink-dim);margin-top:7px}
+.hmeta{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+a.pill{text-decoration:none;transition:background .2s,transform .16s var(--ease-pop)}
+a.pill:hover{background:rgba(34,211,238,.24);transform:translateY(-1px)}
+
+/* ---------- 转折点 ---------- */
+.turn{margin-bottom:40px;padding:20px 22px;border-radius:16px;
+  background:linear-gradient(120deg,rgba(56,189,248,.08),rgba(251,113,133,.08));
+  border:1px solid var(--panel-brd)}
+.tk{font:600 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-faint);margin-bottom:14px}
+.trow{display:flex;align-items:stretch;gap:16px}
+.tcol{flex:1;padding:14px 16px;border-radius:12px;background:rgba(6,12,26,.5);
+  border:1px solid var(--panel-brd);border-left:3px solid var(--cc)}
+.th{font:600 14px/1.3 var(--sans);color:#fff;margin-bottom:7px}
+.td{font:400 12.5px/1.65 var(--sans);color:var(--ink-dim)}
+.tarrow{align-self:center;font-size:26px;color:var(--accent);flex:none;
+  filter:drop-shadow(0 0 12px rgba(34,211,238,.6))}
+
+/* ---------- 过滤条 ---------- */
+.bar{position:sticky;top:0;z-index:20;display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+  padding:14px 0;margin-bottom:8px;
+  background:linear-gradient(180deg,rgba(4,6,13,.96) 60%,rgba(4,6,13,0));
+  backdrop-filter:blur(10px)}
+.layers{display:flex;gap:7px;flex-wrap:wrap;flex:1}
+.lf{cursor:pointer;font:600 12px/1 var(--sans);color:var(--ink-dim);
+  padding:8px 13px;border-radius:9px;background:rgba(150,180,255,.07);
+  border:1px solid var(--panel-brd);transition:all .2s var(--ease-out)}
+.lf b{font-family:var(--mono);color:var(--ink-faint);margin-left:3px;font-weight:600}
+.lf:hover{background:rgba(150,180,255,.15);color:#fff;transform:translateY(-1px)}
+.lf.on{background:linear-gradient(180deg,rgba(34,211,238,.26),rgba(34,211,238,.12));
+  color:#c9f7ff;border-color:rgba(34,211,238,.55)}
+.lf.on b{color:#9fe9f7}
+.search{width:330px;flex:none;height:38px;padding:0 14px;border-radius:10px;
+  background:rgba(150,180,255,.07);border:1px solid var(--panel-brd);color:var(--ink);
+  font:400 13px/1 var(--sans);outline:none;transition:border-color .2s,background .2s}
+.search:focus{border-color:rgba(34,211,238,.6);background:rgba(34,211,238,.08)}
+.search::placeholder{color:var(--ink-faint)}
+.rcount{font:500 12px/1 var(--mono);color:var(--ink-faint);margin-bottom:16px}
+
+/* ---------- 卡片网格 ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+.lcard{position:relative;display:flex;flex-direction:column;padding:16px 17px 14px;border-radius:15px;
+  background:linear-gradient(165deg,rgba(150,180,255,.085),rgba(150,180,255,.025));
+  border:1px solid var(--panel-brd);box-shadow:0 12px 30px rgba(0,0,0,.3);
+  transition:transform .26s var(--ease-out),box-shadow .26s,border-color .26s,opacity .26s}
+.lcard::after{content:"";position:absolute;inset:0 0 auto;height:2px;border-radius:15px 15px 0 0;
+  background:linear-gradient(90deg,transparent,var(--cc),transparent);opacity:.85}
+.lcard:not(.planned):hover{transform:translateY(-4px);border-color:var(--cc);
+  box-shadow:0 20px 44px rgba(0,0,0,.46),0 0 30px -8px var(--cc)}
+.lcard.planned{opacity:.44}
+.lcard[hidden]{display:none}
+.lchd{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.lid{font:700 12.5px/1 var(--mono);color:var(--cc);letter-spacing:.03em}
+.lprio{font:700 10px/1 var(--mono);padding:3px 6px;border-radius:5px;
+  background:rgba(150,180,255,.12);color:var(--ink-dim)}
+.lprio.p0{background:rgba(251,113,133,.18);color:#fecdd3}
+.lprio.p1{background:rgba(251,191,36,.16);color:#fde68a}
+.lok{margin-left:auto;font:600 10.5px/1 var(--mono);color:#a7f3d0;
+  background:rgba(52,211,153,.16);border:1px solid rgba(52,211,153,.4);
+  padding:3px 7px;border-radius:5px}
+.lwait{margin-left:auto;font:600 10.5px/1 var(--mono);color:var(--ink-faint);
+  border:1px solid var(--panel-brd);padding:3px 7px;border-radius:5px}
+.lcard h3{font:600 15px/1.4 var(--sans);color:#fff;margin:0 0 10px}
+.lpts{margin:0 0 12px;padding-left:16px;flex:1}
+.lpts li{font:400 12px/1.62 var(--sans);color:var(--ink-dim);margin-bottom:4px}
+.lpts li::marker{color:var(--cc)}
+.lft{display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  padding-top:11px;border-top:1px solid rgba(150,180,255,.1);margin-bottom:11px}
+.nfile{font:600 10.5px/1 var(--mono);color:var(--ink-faint);white-space:nowrap}
+.lgo{display:block;text-align:center;text-decoration:none;
+  font:600 12.5px/1 var(--sans);color:#c9f7ff;padding:10px;border-radius:10px;
+  background:linear-gradient(180deg,rgba(34,211,238,.2),rgba(34,211,238,.09));
+  border:1px solid rgba(34,211,238,.42);transition:all .2s var(--ease-out)}
+.lgo:hover{background:linear-gradient(180deg,rgba(34,211,238,.34),rgba(34,211,238,.16));
+  border-color:rgba(34,211,238,.7)}
+.lgo.dis{color:var(--ink-faint);background:rgba(150,180,255,.05);
+  border-color:var(--panel-brd);cursor:default}
+.empty{text-align:center;padding:60px 20px;font:400 14px/1.6 var(--sans);color:var(--ink-faint)}
+
+/* ---------- 门禁 ---------- */
+.gates{margin-top:56px;padding-top:34px;border-top:1px solid rgba(150,180,255,.12)}
+.gates h2{font:700 22px/1.3 var(--sans);color:#fff;margin:0 0 20px}
+.ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.gc{padding:14px 15px;border-radius:12px;background:rgba(150,180,255,.05);
+  border:1px solid var(--panel-brd)}
+.gt{font:600 13px/1.3 var(--sans);color:var(--ink);margin-bottom:8px}
+.gd{font:400 12px/1.6 var(--sans);color:var(--ink-dim);margin-top:8px}
+.gfoot{font:400 12px/1.7 var(--mono);color:var(--ink-faint);margin-top:18px}
+.pfoot{margin-top:48px;padding-top:26px;border-top:1px solid rgba(150,180,255,.12);
+  font:400 12.5px/1.9 var(--sans);color:var(--ink-dim)}
+.pfoot b{color:var(--ink)}
+@media (max-width:820px){
+  .pwrap{padding:30px 18px 50px}
+  .hero h1{font-size:34px}
+  .trow{flex-direction:column}
+  .tarrow{transform:rotate(90deg)}
+  .search{width:100%}
+}
+
+</style>
+</head><body>
+<div id="bgAurora"><i></i><i></i><i></i></div>
+<div id="bgGrid"></div>
+<div id="bgVignette"></div>
+<div class="pwrap">
+<header class="hero">
+<div class="hk">GLM-5 推理 &nbsp;·&nbsp; HuggingFace transformers</div>
+<h1>一个 token 的<span class="hl-a">旅程</span></h1>
+<p class="hsub">以 <b>GLM-5.3-Flash（<code class="inl">glm5_next</code>）</b>的推理路径为视角，逐层拆解 transformers 里到底发生了什么 —— 从一份 config，到一块按页分配的 KV cache。</p>
+<div class="hstats">
+<div class="hs cc0"><div class="hv">70</div><div class="hk2">课</div></div>
+<div class="hs cc1"><div class="hv">231</div><div class="hk2">个源文件被覆盖</div></div>
+<div class="hs cc2"><div class="hv">10</div><div class="hk2">层</div></div>
+<div class="hs cc4"><div class="hv">139,345</div><div class="hk2">行源码</div></div>
+</div>
+<div class="hmeta">
+<span class="pill acc">覆盖域是实测的：231 / 328 个推理闭包文件</span>
+<span class="pill">闭包外 97 个（36 个无关模型族，已声明排除）</span>
+<span class="pill ok">已完成 1 / 70 课</span>
+<a class="pill acc" href="TODOLIST.md">计划与覆盖度矩阵</a>
+<a class="pill acc" href="STYLE.md">制作规范</a>
+</div>
+</header>
+<section class="turn">
+<div class="tk">心智模型的转折点</div>
+<div class="trow">
+<div class="tcol cc0"><div class="th">L0 – L4 &nbsp;数学视角</div><div class="td">数据是张量，模型是算子组合。问「<b>算什么</b>」。hidden 是 4 维的、KV 是三行公式、专家是 288 选 8。</div></div>
+<div class="tarrow">⟹</div>
+<div class="tcol cc3"><div class="th">L5 – L9 &nbsp;机器视角</div><div class="td">数据是字节，计算是访存。问「<b>算这个要花多少</b>」。同一个 KV，这里要问占多少显存、按什么粒度分配、溢出时怎么办。</div></div>
+</div>
+</section>
+<div class="bar">
+<div class="layers" id="layers">
+<button class="lf on" data-l="*">全部 <b>70</b></button>
+<button class="lf" data-l="L0">直觉 <b>5</b></button>
+<button class="lf" data-l="L1">配置与分派 <b>7</b></button>
+<button class="lf" data-l="L2">输入流水线 <b>7</b></button>
+<button class="lf" data-l="L3">文本主干 <b>8</b></button>
+<button class="lf" data-l="L4">混合注意力 ★ <b>8</b></button>
+<button class="lf" data-l="L5">缓存与内存 ★★ <b>6</b></button>
+<button class="lf" data-l="L6">生成循环 <b>8</b></button>
+<button class="lf" data-l="L7">权重加载与量化 <b>7</b></button>
+<button class="lf" data-l="L8">推理规模化 <b>6</b></button>
+<button class="lf" data-l="L9">出口与周边 <b>8</b></button>
+</div>
+<input id="q" class="search" type="search" placeholder="搜索课号 / 标题 / 源文件名…" autocomplete="off">
+</div>
+<div id="count" class="rcount"></div>
+<main id="grid" class="grid">
+<article class="lcard cc0" data-l="L0" data-s="l0-01 一次 generate() 里发生了什么 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L0-01</span><span class="lprio p0">P0</span><span class="lok">已交付</span></div>
+<h3>一次 generate() 里发生了什么</h3>
+<ul class="lpts">
+<li>把 generate() 拆成 6 个阶段：取 token → 嵌入 → 45 层 → 归一 → 取 logits → 采样</li>
+<li>实测参数量与 45 层排布，建立「这模型多大」的量感</li>
+<li>标出后面每一层课程对应这张全景图的哪一块</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<a class="lgo" href="L0-intuition/L0-01/index.html">打开课件 →</a>
+</article>
+<article class="lcard cc0 planned" data-l="L0" data-s="l0-02 配置即架构：从 config 读出全部形状 models/glm5_next/configuration_glm5_next.py">
+<div class="lchd"><span class="lid">L0-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>配置即架构：从 config 读出全部形状</h3>
+<ul class="lpts">
+<li>hidden=4096 / 64 头 / qk_nope=256 / v=256 如何拼出注意力形状</li>
+<li>head_dim 被强制等于 qk_rope_head_dim(=0)，这意味着 DSA 层完全不用 RoPE</li>
+<li>mlp_layer_types：前 3 层 dense，其余 42 层 sparse</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">configuration_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc0 planned" data-l="L0" data-s="l0-03 层类型排布：34 层 kda + 11 层 mla models/glm5_next/configuration_glm5_next.py">
+<div class="lchd"><span class="lid">L0-03</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>层类型排布：34 层 KDA + 11 层 MLA</h3>
+<ul class="lpts">
+<li>layer_types 的生成规律 idx % 4 != 3 → linear_attention</li>
+<li>indexer_types：哪些层跑索引器（full），哪些复用上一层（shared）</li>
+<li>为什么是 3:1 而不是 1:1 —— 长上下文服务的成本结构</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">configuration_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc0 planned" data-l="L0" data-s="l0-04 moe 经济学：288 选 8 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L0-04</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>MoE 经济学：288 选 8</h3>
+<ul class="lpts">
+<li>n_routed_experts=288, top-k=8, +1 共享专家 → 激活比约 3%</li>
+<li>routed_scaling_factor=2.5 的作用</li>
+<li>n_group / topk_group 分组路由的动机</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc0 planned" data-l="L0" data-s="l0-05 mhc：4 条残差流 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L0-05</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>mHC：4 条残差流</h3>
+<ul class="lpts">
+<li>hc_mult=4 —— 残差不是一条而是一束</li>
+<li>Sinkhorn 迭代 20 次把路由矩阵约束到双随机流形上</li>
+<li>为什么这比单条残差更难训、但扩展性更好</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L1" data-s="l1-01 pretrainedconfig：配置对象的公共契约 configuration_utils.py">
+<div class="lchd"><span class="lid">L1-01</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>PreTrainedConfig：配置对象的公共契约</h3>
+<ul class="lpts">
+<li>from_pretrained / to_dict / to_json_string 的完整路径</li>
+<li>@strict 装饰器做了什么校验</li>
+<li>sub_configs 与 base_config_key：嵌套配置的寻址规则</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">configuration_utils.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L1" data-s="l1-02 glm5nexttextconfig 逐字段精读 models/glm5_next/configuration_glm5_next.py">
+<div class="lchd"><span class="lid">L1-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>Glm5NextTextConfig 逐字段精读</h3>
+<ul class="lpts">
+<li>每个字段属于哪一组：注意力 / MoE / KDA / DSA / mHC</li>
+<li>validate_architecture 的四条硬约束</li>
+<li>attribute_map 与 keys_to_ignore_at_inference 的用途</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">configuration_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L1" data-s="l1-03 视觉配置与顶层嵌套 models/glm5_next/configuration_glm5_next.py">
+<div class="lchd"><span class="lid">L1-03</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>视觉配置与顶层嵌套</h3>
+<ul class="lpts">
+<li>Glm5NextVisionConfig：depth=24, patch=14, merge=2 → 每 token 覆盖 28 像素</li>
+<li>Glm5NextConfig 如何把 text/vision 两个子配置拼起来</li>
+<li>扁平 checkpoint 的向后兼容分支</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">configuration_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L1" data-s="l1-04 配置的序列化、继承与文档生成 utils/hp_naming.py utils/doc.py utils/auto_docstring.py utils/type_validators.py">
+<div class="lchd"><span class="lid">L1-04</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>配置的序列化、继承与文档生成</h3>
+<ul class="lpts">
+<li>hp_naming 如何把自定义类名映射回上游名字</li>
+<li>doc.py 的文档字符串机械替换</li>
+<li>type_validators 如何把类型注解变成运行期校验</li>
+</ul>
+<div class="lft"><span class="nfile">4 个源文件</span>
+<code class="inl">hp_naming.py +3</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L1" data-s="l1-05 automodel 分派：字符串如何找到类 models/auto/__init__.py models/auto/configuration_auto.py models/auto/auto_factory.py models/auto/auto_mappings.py">
+<div class="lchd"><span class="lid">L1-05</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>AutoModel 分派：字符串如何找到类</h3>
+<ul class="lpts">
+<li>CONFIG_MAPPING 的惰性注册表</li>
+<li>auto_factory 的 _LazyAutoMapping 如何做到「用时才导入」</li>
+<li>从 model_type 字符串到 Glm5NextConfig 的完整链路</li>
+</ul>
+<div class="lft"><span class="nfile">4 个源文件</span>
+<code class="inl">__init__.py +3</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L1" data-s="l1-06 其余四张自动注册表 models/auto/modeling_auto.py models/auto/tokenization_auto.py models/auto/image_processing_auto.py models/auto/video_processing_auto.py models/auto/feature_extraction_auto.py models/auto/processing_auto.py">
+<div class="lchd"><span class="lid">L1-06</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>其余四张自动注册表</h3>
+<ul class="lpts">
+<li>模型/分词器/图像/视频/处理器五种 Auto 类的对称结构</li>
+<li>AutoProcessor 如何把多个子处理器组合起来</li>
+<li>命名冲突时的解析优先级</li>
+</ul>
+<div class="lft"><span class="nfile">6 个源文件</span>
+<code class="inl">modeling_auto.py +5</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L1" data-s="l1-07 动态模块、类型契约与权重名映射表 dynamic_module_utils.py _typing.py conversion_mapping.py">
+<div class="lchd"><span class="lid">L1-07</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>动态模块、类型契约与权重名映射表</h3>
+<ul class="lpts">
+<li>trust_remote_code 路径下的动态导入</li>
+<li>_typing 里的 TensorType 等别名如何统一注解</li>
+<li>conversion_mapping 如何描述跨实现权重名对应关系</li>
+</ul>
+<div class="lft"><span class="nfile">3 个源文件</span>
+<code class="inl">dynamic_module_utils.py +2</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L2" data-s="l2-01 分词器公共契约：慢与快共享的那一层 tokenization_utils_base.py">
+<div class="lchd"><span class="lid">L2-01</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>分词器公共契约：慢与快共享的那一层</h3>
+<ul class="lpts">
+<li>SpecialTokensMixin 与 token 属性体系</li>
+<li>__call__ 的参数如何映射到张量</li>
+<li>padding / truncation 策略的完整枚举</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">tokenization_utils_base.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L2" data-s="l2-02 快分词器、纯 python 分词器与慢→快转换 tokenization_utils_tokenizers.py tokenization_python.py convert_slow_tokenizer.py">
+<div class="lchd"><span class="lid">L2-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>快分词器、纯 Python 分词器与慢→快转换</h3>
+<ul class="lpts">
+<li>tokenizers 库后端的批量编码</li>
+<li>纯 Python 回退路径的存在意义</li>
+<li>convert_slow_tokenizer 如何把 SentencePiece 模型翻译成 fast tokenizer</li>
+</ul>
+<div class="lft"><span class="nfile">3 个源文件</span>
+<code class="inl">tokenization_utils_tokenizers.py +2</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L2" data-s="l2-03 sentencepiece 分词器 tokenization_utils_sentencepiece.py">
+<div class="lchd"><span class="lid">L2-03</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>SentencePiece 分词器</h3>
+<ul class="lpts">
+<li>unigram / BPE 两种模型的加载</li>
+<li>legacy 行为开关</li>
+<li>为什么 GLM-5 的 tokenizer 往往走这个基类</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">tokenization_utils_sentencepiece.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L2" data-s="l2-04 图像处理基座：尺寸、归一化与后端 image_processing_base.py image_processing_utils.py image_processing_backends.py">
+<div class="lchd"><span class="lid">L2-04</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>图像处理基座：尺寸、归一化与后端</h3>
+<ul class="lpts">
+<li>BaseImageProcessor 的 preprocess 契约</li>
+<li>三个后端（PIL / torchvision / numpy）的取舍</li>
+<li>size / resample / rescale 的组合语义</li>
+</ul>
+<div class="lft"><span class="nfile">3 个源文件</span>
+<code class="inl">image_processing_base.py +2</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L2" data-s="l2-05 图像变换、视频与通用视觉工具 image_transforms.py image_utils.py video_processing_utils.py video_utils.py vision_utils.py audio_utils.py">
+<div class="lchd"><span class="lid">L2-05</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>图像变换、视频与通用视觉工具</h3>
+<ul class="lpts">
+<li>resize / center_crop / normalize 的张量级实现</li>
+<li>视频按帧采样与 temporal patch 的关系</li>
+<li>vision_utils 的通用工具集</li>
+</ul>
+<div class="lft"><span class="nfile">6 个源文件</span>
+<code class="inl">image_transforms.py +5</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L2" data-s="l2-06 多模态处理器装配 processing_utils.py models/glm5_next/processing_glm5_next.py models/glm5_next/image_processing_glm5_next.py models/glm5_next/image_processing_pil_glm5_next.py models/glm5_next/video_processing_glm5_next.py feature_extraction_utils.py">
+<div class="lchd"><span class="lid">L2-06</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>多模态处理器装配</h3>
+<ul class="lpts">
+<li>ProcessorMixin 如何把 tokenizer + image/video processor 拼起来</li>
+<li>GLM-5 的 chat template 如何插入视觉占位符</li>
+<li>两套图像处理器实现（默认 / PIL）的分工</li>
+</ul>
+<div class="lft"><span class="nfile">6 个源文件</span>
+<code class="inl">processing_utils.py +5</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L2" data-s="l2-07 视觉塔：从 336x336 像素到 27 个 token models/glm5_next/modeling_glm5_next.py backbone_utils.py utils/backbone_utils.py">
+<div class="lchd"><span class="lid">L2-07</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>视觉塔：从 336x336 像素到 27 个 token</h3>
+<ul class="lpts">
+<li>patch embed 的卷积等价形式</li>
+<li>轴向 RoPE：height/width 两套频率的重组</li>
+<li>patch merger 的空间 2x2 合并与投影</li>
+</ul>
+<div class="lft"><span class="nfile">3 个源文件</span>
+<code class="inl">modeling_glm5_next.py +2</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L3" data-s="l3-01 三种 rmsnorm models/glm5_next/modeling_glm5_next.py pytorch_utils.py">
+<div class="lchd"><span class="lid">L3-01</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>三种 RMSNorm</h3>
+<ul class="lpts">
+<li>Glm5NextTextRMSNorm 与 Unweighted 的差别</li>
+<li>Glm5NextTextRMSNormGated：KDA 输出为什么需要门控</li>
+<li>eps 取 1e-5 还是 1e-6 的实际影响</li>
+</ul>
+<div class="lft"><span class="nfile">2 个源文件</span>
+<code class="inl">modeling_glm5_next.py +1</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L3" data-s="l3-02 mlp 与 swiglu 截断 models/glm5_next/modeling_glm5_next.py activations.py">
+<div class="lchd"><span class="lid">L3-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>MLP 与 SwiGLU 截断</h3>
+<ul class="lpts">
+<li>gate/up/down 三投影的 SwiGLU 结构</li>
+<li>swiglu_limit=10.0 的 clamp 作用与数值动机</li>
+<li>activations 里的 ACT2FN 注册表</li>
+</ul>
+<div class="lft"><span class="nfile">2 个源文件</span>
+<code class="inl">modeling_glm5_next.py +1</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L3" data-s="l3-03 路由器：288 个分数如何变成 8 条路径 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L3-03</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>路由器：288 个分数如何变成 8 条路径</h3>
+<ul class="lpts">
+<li>gate 线性层 + softmax 的完整流程</li>
+<li>n_group / topk_group 的两级筛选</li>
+<li>norm_topk_prob 与 routed_scaling_factor 的数值效果</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L3" data-s="l3-04 专家层与 grouped gemm models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L3-04</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>专家层与 grouped GEMM</h3>
+<ul class="lpts">
+<li>gate_up_proj 合并打包的存储布局</li>
+<li>_apply_gate 里 swiglu_limit 的二次截断</li>
+<li>为什么专家权重按 (E, ...) 排布才能用 grouped GEMM</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L3" data-s="l3-05 moe 装配与共享专家 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L3-05</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>MoE 装配与共享专家</h3>
+<ul class="lpts">
+<li>Glm5NextTextMoE 的前向：共享专家与路由专家的合并方式</li>
+<li>稠密层走 Glm5NextTextMLP 的分支条件</li>
+<li>output_router_logits 在推理时的影响</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L3" data-s="l3-06 ★ mhc：流形约束超连接 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L3-06</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>★ mHC：流形约束超连接</h3>
+<ul class="lpts">
+<li>4 条残差流的读取、混合、写回三步</li>
+<li>Sinkhorn 迭代 20 次得到双随机矩阵的过程</li>
+<li>HyperHead 如何把多条流收回一条</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L3" data-s="l3-07 遗忘门与门控范数 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L3-07</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>遗忘门与门控范数</h3>
+<ul class="lpts">
+<li>ForgetGate 的线性投影 + 下界截断</li>
+<li>linear_lower_bound=-5.0 的数值意图</li>
+<li>A_log / dt_bias 这类参数的初始化来源</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L3" data-s="l3-08 解码层装配：三个子块的顺序 models/glm5_next/modeling_glm5_next.py modeling_layers.py modeling_outputs.py">
+<div class="lchd"><span class="lid">L3-08</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>解码层装配：三个子块的顺序</h3>
+<ul class="lpts">
+<li>mHC → 注意力 → mHC → MoE 的完整顺序</li>
+<li>GradientCheckpointingLayer 在推理时的实际行为</li>
+<li>modeling_outputs 的数据类约定</li>
+</ul>
+<div class="lft"><span class="nfile">3 个源文件</span>
+<code class="inl">modeling_glm5_next.py +2</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc4 planned" data-l="L4" data-s="l4-01 ★ 为什么 glm-5 要混合两种注意力 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L4-01</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>★ 为什么 GLM-5 要混合两种注意力</h3>
+<ul class="lpts">
+<li>全注意力的 KV 线性增长 vs 线性注意力的常数状态</li>
+<li>3:1 排布如何兼顾精确检索与长文本成本</li>
+<li>NoPE 的取舍：位置信息交给 KDA 与索引器</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc4 planned" data-l="L4" data-s="l4-02 kda 循环形式：逐 token 的递推 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L4-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>KDA 循环形式：逐 token 的递推</h3>
+<ul class="lpts">
+<li>recurrent_kimi_delta_attention 的状态更新公式</li>
+<li>delta 规则与普通线性注意力的区别</li>
+<li>状态矩阵的形状 (head_dim, v_head_dim)</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc4 planned" data-l="L4" data-s="l4-03 kda 分块形式：把递推变成矩阵乘 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L4-03</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>KDA 分块形式：把递推变成矩阵乘</h3>
+<ul class="lpts">
+<li>chunk_kimi_delta_attention 的分块矩阵化</li>
+<li>块内并行、块间递推的两级结构</li>
+<li>为什么训练用分块、解码用循环</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc4 planned" data-l="L4" data-s="l4-04 短卷积与 l2 归一 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L4-04</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>短卷积与 L2 归一</h3>
+<ul class="lpts">
+<li>causal_conv1d_fn 与 update 的分工（prefill / decode）</li>
+<li>kernel=4 的深度可分离卷积在 KDA 中的作用</li>
+<li>l2norm 对 q/k 的归一化</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc4 planned" data-l="L4" data-s="l4-05 线性注意力层装配 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L4-05</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>线性注意力层装配</h3>
+<ul class="lpts">
+<li>q/k/v 投影 + 短卷积 + 门控 + 范数的完整前向</li>
+<li>apply_mask_to_padding_states 的用途</li>
+<li>缓存状态如何读写</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc4 planned" data-l="L4" data-s="l4-06 ★ dsa 索引器：2048 个位置是怎么选出来的 models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L4-06</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>★ DSA 索引器：2048 个位置是怎么选出来的</h3>
+<ul class="lpts">
+<li>index_head_dim=128, index_n_heads=32 的小型注意力</li>
+<li>index_kpool=16：先池化再选择的粗筛</li>
+<li>get_visible_tokens / get_pooled_states / append_visible_tail 三步</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">modeling_glm5_next.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc4 planned" data-l="L4" data-s="l4-07 mla：把 kv 压进 512 维隐向量 models/glm5_next/modeling_glm5_next.py modeling_rope_utils.py">
+<div class="lchd"><span class="lid">L4-07</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>MLA：把 KV 压进 512 维隐向量</h3>
+<ul class="lpts">
+<li>q_lora_rank=1536 / kv_lora_rank=512 的压缩路径</li>
+<li>expand_kv 如何从隐向量还原出多头 K/V</li>
+<li>NoPE 下 head_dim=0 导致的实现细节</li>
+</ul>
+<div class="lft"><span class="nfile">2 个源文件</span>
+<code class="inl">modeling_glm5_next.py +1</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc4 planned" data-l="L4" data-s="l4-08 掩码构造与注意力计算 models/glm5_next/modeling_glm5_next.py modeling_flash_attention_utils.py">
+<div class="lchd"><span class="lid">L4-08</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>掩码构造与注意力计算</h3>
+<ul class="lpts">
+<li>build_attention_mask_from_topk 如何把索引变成掩码</li>
+<li>eager_attention_forward 与 repeat_kv 的参考实现</li>
+<li>GQA 的 n_rep 展开</li>
+</ul>
+<div class="lft"><span class="nfile">2 个源文件</span>
+<code class="inl">modeling_glm5_next.py +1</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc5 planned" data-l="L5" data-s="l5-01 ★ 转折点：cache 抽象层 cache_utils.py">
+<div class="lchd"><span class="lid">L5-01</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>★ 转折点：Cache 抽象层</h3>
+<ul class="lpts">
+<li>DynamicCache 的 layers 列表契约</li>
+<li>为什么每种层类型需要自己的 Cache 类</li>
+<li>record_past / 预分配 两种策略</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">cache_utils.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc5 planned" data-l="L5" data-s="l5-02 ★ 线性注意力层的缓存：常数状态 cache_utils.py">
+<div class="lchd"><span class="lid">L5-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>★ 线性注意力层的缓存：常数状态</h3>
+<ul class="lpts">
+<li>conv_states 与 recurrent_states 的形状</li>
+<li>为什么 KDA 层的显存与序列长度无关</li>
+<li>has_previous_state 标志的作用</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">cache_utils.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc5 planned" data-l="L5" data-s="l5-03 ★ 索引注意力层的缓存：kv + 索引键 cache_utils.py">
+<div class="lchd"><span class="lid">L5-03</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>★ 索引注意力层的缓存：KV + 索引键</h3>
+<ul class="lpts">
+<li>keys/values 的追加式增长</li>
+<li>indexer_keys 的独立存储与 dtype</li>
+<li>每 token 显存的完整算式</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">cache_utils.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc5 planned" data-l="L5" data-s="l5-04 分页缓存：按块分配与复用 generation/continuous_batching/cache.py generation/continuous_batching/cache_allocators/cache_pool.py generation/continuous_batching/cache_allocators/cache_allocator.py generation/continuous_batching/cache_allocators/__init__.py">
+<div class="lchd"><span class="lid">L5-04</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>分页缓存：按块分配与复用</h3>
+<ul class="lpts">
+<li>page/block 的粒度与碎片</li>
+<li>池化分配器的空闲链表</li>
+<li>引用计数与共享前缀</li>
+</ul>
+<div class="lft"><span class="nfile">4 个源文件</span>
+<code class="inl">cache.py +3</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc5 planned" data-l="L5" data-s="l5-05 掩码生成：从 padding 到因果 masking_utils.py modeling_attn_mask_utils.py">
+<div class="lchd"><span class="lid">L5-05</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>掩码生成：从 padding 到因果</h3>
+<ul class="lpts">
+<li>4D 因果掩码与 2D padding 掩码的合成</li>
+<li>滑动窗口掩码的构造</li>
+<li>sdpa / flash 各自需要的掩码形态</li>
+</ul>
+<div class="lft"><span class="nfile">2 个源文件</span>
+<code class="inl">masking_utils.py +1</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc5 planned" data-l="L5" data-s="l5-06 连续批处理的缓存分配策略 generation/continuous_batching/cache_allocators/full_attention.py generation/continuous_batching/cache_allocators/sliding_attention.py generation/continuous_batching/cache.py">
+<div class="lchd"><span class="lid">L5-06</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>连续批处理的缓存分配策略</h3>
+<ul class="lpts">
+<li>全注意力与滑窗注意力的块生命周期差异</li>
+<li>滑窗导致的块回收时机</li>
+<li>前缀共享在批内的实现</li>
+</ul>
+<div class="lft"><span class="nfile">3 个源文件</span>
+<code class="inl">full_attention.py +2</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc0 planned" data-l="L6" data-s="l6-01 generate 主循环 generation/utils.py generation/__init__.py">
+<div class="lchd"><span class="lid">L6-01</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>generate 主循环</h3>
+<ul class="lpts">
+<li>prepare_inputs → prefill → decode 循环 → finalize</li>
+<li>cache_position 的计算与更新</li>
+<li>stateful 模型（GLM-5）走的分支</li>
+</ul>
+<div class="lft"><span class="nfile">2 个源文件</span>
+<code class="inl">utils.py +1</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc0 planned" data-l="L6" data-s="l6-02 generationconfig：采样参数的容器 generation/configuration_utils.py">
+<div class="lchd"><span class="lid">L6-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>GenerationConfig：采样参数的容器</h3>
+<ul class="lpts">
+<li>采样相关字段的完整清单与互斥规则</li>
+<li>validate 阶段的参数校验</li>
+<li>generation_config 与 model.config 的关系</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">configuration_utils.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc0 planned" data-l="L6" data-s="l6-03 logits 处理链 generation/logits_process.py">
+<div class="lchd"><span class="lid">L6-03</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>logits 处理链</h3>
+<ul class="lpts">
+<li>处理器按优先级串联的顺序（这决定了结果）</li>
+<li>top-k / top-p / min-p 的累积概率实现</li>
+<li>重复惩罚与存在惩罚的差别</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">logits_process.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc0 planned" data-l="L6" data-s="l6-04 停止条件与流式输出 generation/stopping_criteria.py generation/streamers.py">
+<div class="lchd"><span class="lid">L6-04</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>停止条件与流式输出</h3>
+<ul class="lpts">
+<li>MaxLength / EOS / StopString 三类条件的组合</li>
+<li>流式输出的增量解码</li>
+<li>stopping criteria 在批处理下的向量化</li>
+</ul>
+<div class="lft"><span class="nfile">2 个源文件</span>
+<code class="inl">stopping_criteria.py +1</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc0 planned" data-l="L6" data-s="l6-05 投机解码 generation/candidate_generator.py">
+<div class="lchd"><span class="lid">L6-05</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>投机解码</h3>
+<ul class="lpts">
+<li>草稿模型与主模型的对齐</li>
+<li>为什么 GLM-5 不支持 assisted generation</li>
+<li>候选生成的接受/拒绝逻辑</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">candidate_generator.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc0 planned" data-l="L6" data-s="l6-06 水印 generation/watermarking.py">
+<div class="lchd"><span class="lid">L6-06</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>水印</h3>
+<ul class="lpts">
+<li>logits 偏置式水印的原理</li>
+<li>水印强度与文本质量的权衡</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">watermarking.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc0 planned" data-l="L6" data-s="l6-07 连续批处理：调度器与模型运行器 generation/continuous_batching/__init__.py generation/continuous_batching/scheduler.py generation/continuous_batching/model_runner.py generation/continuous_batching/continuous_api.py generation/continuous_batching/requests.py generation/continuous_batching/input_outputs.py">
+<div class="lchd"><span class="lid">L6-07</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>连续批处理：调度器与模型运行器</h3>
+<ul class="lpts">
+<li>请求队列 → 调度 → 前向 → 回写 的闭环</li>
+<li>continuous batching 相比静态批处理省下什么</li>
+<li>请求的优先级与抢占</li>
+</ul>
+<div class="lft"><span class="nfile">6 个源文件</span>
+<code class="inl">__init__.py +5</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc0 planned" data-l="L6" data-s="l6-08 连续批处理：处理器、分发与卸载 generation/continuous_batching/cb_logits_processors.py generation/continuous_batching/initialization.py generation/continuous_batching/distributed.py generation/continuous_batching/utils.py generation/continuous_batching/offloading_manager.py">
+<div class="lchd"><span class="lid">L6-08</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>连续批处理：处理器、分发与卸载</h3>
+<ul class="lpts">
+<li>批内 logits 处理器如何在调度器里执行</li>
+<li>多进程/多卡下的请求分发</li>
+<li>权重卸载到 CPU 的时机</li>
+</ul>
+<div class="lft"><span class="nfile">5 个源文件</span>
+<code class="inl">cb_logits_processors.py +4</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L7" data-s="l7-01 from_pretrained 全景 modeling_utils.py initialization.py">
+<div class="lchd"><span class="lid">L7-01</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>from_pretrained 全景</h3>
+<ul class="lpts">
+<li>config → 模型骨架 → 权重下载 → 加载 → 后处理 的完整阶段</li>
+<li>device_map 与 dtype 的解析顺序</li>
+<li>低内存加载（meta device）路径</li>
+</ul>
+<div class="lft"><span class="nfile">2 个源文件</span>
+<code class="inl">modeling_utils.py +1</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L7" data-s="l7-02 核心加载器：权重名映射 core_model_loading.py">
+<div class="lchd"><span class="lid">L7-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>核心加载器：权重名映射</h3>
+<ul class="lpts">
+<li>checkpoint 名 → 模型参数名 的映射规则</li>
+<li>量化权重的反量化与拼接</li>
+<li>加载报告中的 missing / unexpected 分类</li>
+</ul>
+<div class="lft"><span class="nfile">1 个源文件</span>
+<code class="inl">core_model_loading.py</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L7" data-s="l7-03 张量并行计划与模型输出 modeling_layers.py modeling_outputs.py models/glm5_next/modeling_glm5_next.py">
+<div class="lchd"><span class="lid">L7-03</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>张量并行计划与模型输出</h3>
+<ul class="lpts">
+<li>base_model_tp_plan 的 colwise/rowwise 标注</li>
+<li>base_model_ep_plan 的 grouped_gemm 标注</li>
+<li>模型输出数据类的字段</li>
+</ul>
+<div class="lft"><span class="nfile">3 个源文件</span>
+<code class="inl">modeling_layers.py +2</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L7" data-s="l7-04 量化基座：quantizer 契约 quantizers/__init__.py quantizers/base.py quantizers/auto.py quantizers/quantizers_utils.py utils/quantization_config.py">
+<div class="lchd"><span class="lid">L7-04</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>量化基座：Quantizer 契约</h3>
+<ul class="lpts">
+<li>HfQuantizer 的 6 个钩子</li>
+<li>auto 如何从 config 选出量化器</li>
+<li>量化配置的校验与默认值</li>
+</ul>
+<div class="lft"><span class="nfile">5 个源文件</span>
+<code class="inl">__init__.py +4</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L7" data-s="l7-05 量化器家族（一）：gpu 主流方案 quantizers/quantizer_bnb_4bit.py quantizers/quantizer_bnb_8bit.py quantizers/quantizer_gptq.py quantizers/quantizer_awq.py quantizers/quantizer_eetq.py quantizers/quantizer_hqq.py quantizers/quantizer_aqlm.py quantizers/quantizer_vptq.py quantizers/quantizer_spqr.py quantizers/quantizer_quark.py">
+<div class="lchd"><span class="lid">L7-05</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>量化器家族（一）：GPU 主流方案</h3>
+<ul class="lpts">
+<li>每种的位宽、粒度（per-tensor/channel/group）与是否需要校准</li>
+<li>推理时反量化发生在哪一步</li>
+<li>哪种适合 GLM-5 这类 MoE</li>
+</ul>
+<div class="lft"><span class="nfile">10 个源文件</span>
+<code class="inl">quantizer_bnb_4bit.py +9</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L7" data-s="l7-06 量化器家族（二）：新格式与实验方案 quantizers/quantizer_quanto.py quantizers/quantizer_torchao.py quantizers/quantizer_finegrained_fp8.py quantizers/quantizer_fbgemm_fp8.py quantizers/quantizer_fp_quant.py quantizers/quantizer_mxfp4.py quantizers/quantizer_nvfp4.py quantizers/quantizer_compressed_tensors.py quantizers/quantizer_auto_round.py quantizers/quantizer_bitnet.py quantizers/quantizer_higgs.py quantizers/quantizer_sinq.py quantizers/quantizer_metal.py quantizers/quantizer_gemma.py quantizers/quantizer_fouroversix.py">
+<div class="lchd"><span class="lid">L7-06</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>量化器家族（二）：新格式与实验方案</h3>
+<ul class="lpts">
+<li>FP8 / MXFP4 / NVFP4 的浮点量化与整数量化的差别</li>
+<li>压缩张量格式如何描述任意量化方案</li>
+<li>逐块缩放因子的开销</li>
+</ul>
+<div class="lft"><span class="nfile">15 个源文件</span>
+<code class="inl">quantizer_quanto.py +14</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc1 planned" data-l="L7" data-s="l7-07 gguf：另一种权重容器 quantizers/quantizer_gguf.py modeling_gguf_pytorch_utils.py safetensors_conversion.py integrations/gguf/__init__.py integrations/gguf/dequant.py integrations/gguf/gguf_conversion_mapping.py integrations/gguf/gguf_tokenizer_mapping.py integrations/gguf/kernels.py integrations/gguf/reader.py integrations/gguf/utils.py">
+<div class="lchd"><span class="lid">L7-07</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>GGUF：另一种权重容器</h3>
+<ul class="lpts">
+<li>GGUF 文件结构与量化块的反量化</li>
+<li>safetensors 自动转换的存在意义</li>
+<li>GGUF 分词器到 HF 分词器的映射</li>
+</ul>
+<div class="lft"><span class="nfile">10 个源文件</span>
+<code class="inl">quantizer_gguf.py +9</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L8" data-s="l8-01 注意力后端分派 integrations/__init__.py integrations/sdpa_attention.py integrations/flash_attention.py integrations/flex_attention.py integrations/msa_attention.py integrations/npu_flash_attention.py monkey_patching.py">
+<div class="lchd"><span class="lid">L8-01</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>注意力后端分派</h3>
+<ul class="lpts">
+<li>attn_implementation 的取值与回退顺序</li>
+<li>SDPA 后端的 GQA 处理</li>
+<li>flex_attention 的可编程掩码</li>
+</ul>
+<div class="lft"><span class="nfile">7 个源文件</span>
+<code class="inl">__init__.py +6</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L8" data-s="l8-02 分页注意力后端 integrations/eager_paged.py integrations/flash_paged.py integrations/sdpa_paged.py modeling_attn_mask_utils.py">
+<div class="lchd"><span class="lid">L8-02</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>分页注意力后端</h3>
+<ul class="lpts">
+<li>paged attention 与连续 KV 的接口差异</li>
+<li>块表（block table）如何参与注意力计算</li>
+<li>三种分页后端的适用场景</li>
+</ul>
+<div class="lft"><span class="nfile">4 个源文件</span>
+<code class="inl">eager_paged.py +3</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L8" data-s="l8-03 张量并行 distributed/__init__.py distributed/tensor_parallel.py distributed/mixin.py integrations/tensor_parallel.py">
+<div class="lchd"><span class="lid">L8-03</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>张量并行</h3>
+<ul class="lpts">
+<li>colwise / rowwise / packed_colwise 的切分方式</li>
+<li>mla_kv_a_proj 这类自定义切分策略</li>
+<li>分配后如何保证数值等价</li>
+</ul>
+<div class="lft"><span class="nfile">4 个源文件</span>
+<code class="inl">__init__.py +3</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L8" data-s="l8-04 专家并行与 moe 集成 integrations/moe.py integrations/sonicmoe.py integrations/deepgemm.py distributed/utils.py">
+<div class="lchd"><span class="lid">L8-04</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>专家并行与 MoE 集成</h3>
+<ul class="lpts">
+<li>ep_router / grouped_gemm / moe_tp_experts 三种标注</li>
+<li>288 个专家如何切到多卡</li>
+<li>all-to-all 通信量的估算</li>
+</ul>
+<div class="lft"><span class="nfile">4 个源文件</span>
+<code class="inl">moe.py +3</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L8" data-s="l8-05 流水线并行、分片与配置 distributed/pipeline_parallel.py distributed/sharding_utils.py distributed/configuration_utils.py distributed/fsdp.py integrations/fsdp.py integrations/deepspeed.py">
+<div class="lchd"><span class="lid">L8-05</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>流水线并行、分片与配置</h3>
+<ul class="lpts">
+<li>base_model_pp_plan 的输入输出约定</li>
+<li>流水线气泡与微批</li>
+<li>分片策略与推理的关系</li>
+</ul>
+<div class="lft"><span class="nfile">6 个源文件</span>
+<code class="inl">pipeline_parallel.py +5</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc2 planned" data-l="L8" data-s="l8-06 异构设备与加速器集成 integrations/heterogeneity/__init__.py integrations/heterogeneity/configuration_utils.py integrations/mistral/__init__.py integrations/mistral/constants.py integrations/accelerate.py integrations/tpu.py integrations/hub_kernels.py">
+<div class="lchd"><span class="lid">L8-06</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>异构设备与加速器集成</h3>
+<ul class="lpts">
+<li>异构配置如何在 config 上挂载额外字段</li>
+<li>TPU 与 GPU 的路径差异</li>
+<li>hub_kernels 的动态内核下载</li>
+</ul>
+<div class="lft"><span class="nfile">7 个源文件</span>
+<code class="inl">__init__.py +6</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L9" data-s="l9-01 导出器：把模型交给别的运行时 exporters/__init__.py exporters/auto.py exporters/base.py exporters/configs.py exporters/exporter_dynamo.py exporters/exporter_executorch.py exporters/exporter_onnx.py exporters/exporter_openvino.py exporters/utils.py">
+<div class="lchd"><span class="lid">L9-01</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>导出器：把模型交给别的运行时</h3>
+<ul class="lpts">
+<li>统一导出接口与各后端的差异</li>
+<li>动态轴的声明</li>
+<li>为什么要导出 —— 推理部署的最后一步</li>
+</ul>
+<div class="lft"><span class="nfile">9 个源文件</span>
+<code class="inl">__init__.py +8</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L9" data-s="l9-02 推理时为什么还 import 了训练损失 loss/__init__.py loss/loss_utils.py loss/loss_for_object_detection.py loss/loss_d_fine.py loss/loss_deformable_detr.py loss/loss_deimv2.py loss/loss_grounding_dino.py loss/loss_lw_detr.py loss/loss_rf_detr.py loss/loss_rnnt.py loss/loss_rt_detr.py loss/loss_tdt.py">
+<div class="lchd"><span class="lid">L9-02</span><span class="lprio p2">P2</span><span class="lwait">计划中</span></div>
+<h3>推理时为什么还 import 了训练损失</h3>
+<ul class="lpts">
+<li>实测：这些文件确实在推理闭包里，但前向不执行</li>
+<li>导入副作用与配置时间开销</li>
+<li>Router 的 load balancing loss 在哪</li>
+</ul>
+<div class="lft"><span class="nfile">12 个源文件</span>
+<code class="inl">__init__.py +11</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L9" data-s="l9-03 运行期基础设施 utils/__init__.py utils/logging.py utils/hub.py utils/import_utils.py utils/versions.py utils/deprecation.py utils/constants.py dependency_versions_check.py dependency_versions_table.py utils/generic.py __init__.py">
+<div class="lchd"><span class="lid">L9-03</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>运行期基础设施</h3>
+<ul class="lpts">
+<li>惰性模块 __getattr__ 的实现机制</li>
+<li>import_utils 的能力探测与缓存</li>
+<li>版本守卫与依赖检查表</li>
+</ul>
+<div class="lft"><span class="nfile">11 个源文件</span>
+<code class="inl">__init__.py +10</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L9" data-s="l9-04 加载报告、内核配置与调试工具 utils/loading_report.py utils/kernel_config.py utils/output_capturing.py utils/attention_visualizer.py utils/peft_utils.py utils/dummy_mistral_common_objects.py utils/dummy_sentencepiece_and_tokenizers_objects.py trainer_utils.py">
+<div class="lchd"><span class="lid">L9-04</span><span class="lprio p2">P2</span><span class="lwait">计划中</span></div>
+<h3>加载报告、内核配置与调试工具</h3>
+<ul class="lpts">
+<li>加载报告如何把 missing/unexpected 变成可读结论</li>
+<li>kernel_config 描述可替换内核</li>
+<li>dummy objects 如何让未安装依赖也能被 import</li>
+</ul>
+<div class="lft"><span class="nfile">8 个源文件</span>
+<code class="inl">loading_report.py +7</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L9" data-s="l9-05 对话模板与工具调用解析 utils/chat_template_utils.py utils/chat_parsing/__init__.py utils/chat_parsing/content_parsers.py utils/chat_parsing/response_parser.py utils/chat_parsing/response_templates.py">
+<div class="lchd"><span class="lid">L9-05</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>对话模板与工具调用解析</h3>
+<ul class="lpts">
+<li>Jinja 模板的渲染与校验</li>
+<li>工具调用的流式解析状态机</li>
+<li>响应模板如何适配不同模型的输出格式</li>
+</ul>
+<div class="lft"><span class="nfile">5 个源文件</span>
+<code class="inl">chat_template_utils.py +4</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L9" data-s="l9-06 量化集成层 integrations/bitsandbytes.py integrations/quanto.py integrations/torchao.py integrations/fp_quant.py integrations/finegrained_fp8.py integrations/ggml.py integrations/compressed_tensors.py integrations/aqlm.py integrations/hqq.py integrations/spqr.py integrations/peft.py integrations/tiktoken.py integrations/liger.py">
+<div class="lchd"><span class="lid">L9-06</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>量化集成层</h3>
+<ul class="lpts">
+<li>每个集成提供的算子替换点</li>
+<li>PEFT 与量化叠加时的顺序</li>
+<li>为什么有了 quantizer 还需要 integration</li>
+</ul>
+<div class="lft"><span class="nfile">13 个源文件</span>
+<code class="inl">bitsandbytes.py +12</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L9" data-s="l9-07 模型族继承链：glm-5 站在谁的肩膀上 models/glm5_next/__init__.py models/glm4v/__init__.py models/glm4v/configuration_glm4v.py models/glm4v/modeling_glm4v.py models/glm4v_moe/__init__.py models/glm4v_moe/configuration_glm4v_moe.py models/glm4v_moe/modeling_glm4v_moe.py models/glm_ocr/__init__.py models/glm_ocr/configuration_glm_ocr.py models/glm_ocr/modeling_glm_ocr.py models/kimi_k25/__init__.py models/kimi_k25/configuration_kimi_k25.py models/kimi_k25/modeling_kimi_k25.py models/qwen3_5/__init__.py models/qwen3_5/configuration_qwen3_5.py models/qwen3_5/modeling_qwen3_5.py models/qwen3_5/tokenization_qwen3_5.py models/qwen3_5_moe/__init__.py models/qwen3_5_moe/configuration_qwen3_5_moe.py models/qwen3_5_moe/modeling_qwen3_5_moe.py models/deepseek_v2/__init__.py models/deepseek_v2/configuration_deepseek_v2.py models/deepseek_v2/modeling_deepseek_v2.py">
+<div class="lchd"><span class="lid">L9-07</span><span class="lprio p1">P1</span><span class="lwait">计划中</span></div>
+<h3>模型族继承链：GLM-5 站在谁的肩膀上</h3>
+<ul class="lpts">
+<li>实测：为什么这些模型会被 GLM-5 的推理闭包带进来</li>
+<li>KDA 与 Kimi 的渊源、DSA 与 DeepSeek 的渊源</li>
+<li>共享组件与复制粘贴的边界</li>
+</ul>
+<div class="lft"><span class="nfile">23 个源文件</span>
+<code class="inl">__init__.py +22</code>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+<article class="lcard cc3 planned" data-l="L9" data-s="l9-08 收束：一次 glm-5 推理的完整文件清单 ">
+<div class="lchd"><span class="lid">L9-08</span><span class="lprio p0">P0</span><span class="lwait">计划中</span></div>
+<h3>收束：一次 GLM-5 推理的完整文件清单</h3>
+<ul class="lpts">
+<li>把 9 层课压缩成一张「文件 → 阶段」的总表</li>
+<li>重新回答 L0-01 的全景图，这次每一块都能说出文件名</li>
+<li>实测统计：231 个文件、多少行、多少课</li>
+</ul>
+<div class="lft"><span class="nfile">0 个源文件</span>
+</div>
+<span class="lgo dis">尚未产出</span>
+</article>
+</main>
+<div id="empty" class="empty" hidden>没有匹配的课。清空搜索框或切换层。</div>
+<section class="gates">
+<h2>四道门禁 —— 「课件可信」的唯一依据</h2>
+<div class="ggrid">
+<div class="gc"><div class="gt">A1/A3 保真</div><code class="inl">tools/check_fidelity.py</code><div class="gd">每个引用块逐字来自标注源文件，且位置连续</div></div>
+<div class="gc"><div class="gt">A2 参数</div><code class="inl">tools/check_params.py</code><div class="gd">每个 --flag 都在实测真值集里（211 项）</div></div>
+<div class="gc"><div class="gt">A4 语法</div><code class="inl">tools/lint_lessons.py</code><div class="gd">四文件齐备、node --check 通过、分幕字段完整</div></div>
+<div class="gc"><div class="gt">B 覆盖度</div><code class="inl">tools/check_coverage.py</code><div class="gd">差集为空、无空课、无幻影引用</div></div>
+<div class="gc"><div class="gt">C 渲染</div><code class="inl">tools/check_render.py</code><div class="gd">两分辨率 × 3 时间点，0 JS 错误 / 0 溢出 / 交互可用</div></div>
+</div>
+<p class="gfoot">顺序：<code class="inl">lint</code> → <code class="inl">split_blocks</code> → <code class="inl">fidelity</code> → <code class="inl">params</code> → <code class="inl">coverage</code> → <code class="inl">render</code>　｜　<code class="inl">tools/run_gates.sh</code></p>
+</section>
+<footer class="pfoot">
+<div>课件为静态页面：<b>双击任意一课即可离线打开</b>，零 CDN、零构建、零网络请求。</div>
+<div class="dim">源码引用自 <code class="inl">huggingface/transformers</code> 的 <code class="inl">src/transformers/</code>；覆盖域由实测推理闭包确定。</div>
+</footer>
+</div>
+<script>
+
+(function () {
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.lcard'));
+  var q = document.getElementById('q');
+  var count = document.getElementById('count');
+  var empty = document.getElementById('empty');
+  var layer = '*';
+
+  function apply() {
+    var s = (q.value || '').trim().toLowerCase();
+    var n = 0;
+    cards.forEach(function (c) {
+      var okL = (layer === '*' || c.dataset.l === layer);
+      var okS = !s || c.dataset.s.indexOf(s) >= 0;
+      var show = okL && okS;
+      c.hidden = !show;
+      if (show) n++;
+    });
+    count.textContent = '显示 ' + n + ' / ' + cards.length + ' 课'
+      + (layer === '*' ? '' : '　层过滤：' + layer)
+      + (s ? '　搜索：「' + q.value.trim() + '」' : '');
+    empty.hidden = n !== 0;
+  }
+
+  document.getElementById('layers').addEventListener('click', function (e) {
+    var b = e.target.closest('.lf');
+    if (!b) return;
+    Array.prototype.forEach.call(this.querySelectorAll('.lf'), function (x) { x.classList.remove('on'); });
+    b.classList.add('on');
+    layer = b.dataset.l;
+    apply();
+  });
+  q.addEventListener('input', apply);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === '/' && document.activeElement !== q) { q.focus(); e.preventDefault(); }
+    if (e.key === 'Escape') { q.value = ''; apply(); q.blur(); }
+  });
+  apply();
+})();
+
+</script>
+</body></html>
