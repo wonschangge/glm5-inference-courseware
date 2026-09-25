@@ -29,6 +29,24 @@ def node_check(js_path):
         return None, "node 不可用"
 
 
+def _brace_match(html):
+    """定位 `nav:` 后的 { 与配对 }（不能用非贪婪正则，会吞掉右花括号）。"""
+    m = re.search(r"nav\s*:\s*\{", html)
+    if not m:
+        return None, None
+    o = html.index("{", m.start())
+    depth, i = 0, o
+    while i < len(html):
+        if html[i] == "{":
+            depth += 1
+        elif html[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return o, i
+        i += 1
+    return o, None
+
+
 def lint_one(lid, d):
     errs, warns = [], []
     for f in C.LESSON_FILES:
@@ -77,6 +95,32 @@ def lint_one(lid, d):
             tgt = os.path.normpath(os.path.join(d, u))
             if not os.path.isfile(tgt):
                 errs.append(f"index.html 引用了不存在的资源: {u}")
+
+    # ★ index.html 的内联 boot 脚本必须单独查语法。
+    #   `node --check lesson.js` 覆盖不到它 —— 一段内联脚本少了右花括号时，
+    #   页面白屏但 lint 全绿，只有渲染门禁才会发现。这里补上这一课。
+    if os.path.isfile(html):
+        h = C.read_text(html)
+        m = re.search(r"<script>\s*(SHELL\.boot.*?)\s*</script>", h, re.S)
+        if not m:
+            errs.append("index.html 找不到 SHELL.boot 内联脚本")
+        else:
+            import tempfile
+            with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False,
+                                             encoding="utf-8") as f:
+                f.write(m.group(1))
+                tmp = f.name
+            try:
+                ok2, err2 = node_check(tmp)
+                if ok2 is False:
+                    errs.append("index.html 内联脚本语法错误: "
+                                + (err2.splitlines()[0] if err2 else ""))
+            finally:
+                os.unlink(tmp)
+        # nav 花括号必须配对
+        o, c = _brace_match(h)
+        if o is None or c is None:
+            errs.append("index.html 的 nav 对象花括号不配对")
 
     rd = os.path.join(d, "README.md")
     if os.path.isfile(rd):
