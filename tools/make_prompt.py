@@ -82,24 +82,22 @@ def build(lid):
     idx = plan.LESSONS.index(L)
     prev_id = plan.LESSONS[idx - 1]["id"] if idx > 0 else None
     next_id = plan.LESSONS[idx + 1]["id"] if idx + 1 < len(plan.LESSONS) else None
-    prev_dir = ("../" + prev_id.split("-")[0] + "-" + {
-        "L0": "intuition", "L1": "config", "L2": "input", "L3": "backbone",
-        "L4": "attention", "L5": "cache", "L6": "generation", "L7": "loading",
-        "L8": "scaling", "L9": "periphery"}[prev_id.split("-")[0]] + "/" + prev_id + "/index.html") if prev_id else None
-    next_dir = ("../" + next_id.split("-")[0] + "-" + {
-        "L0": "intuition", "L1": "config", "L2": "input", "L3": "backbone",
-        "L4": "attention", "L5": "cache", "L6": "generation", "L7": "loading",
-        "L8": "scaling", "L9": "periphery"}[next_id.split("-")[0]] + "/" + next_id + "/index.html") if next_id else None
-    # 同层内的邻居优先作为 nav，更容易一条线读下来
+
+    # 同层内用同层邻居；层边界用全局邻居（会跨层）。
     same = [x["id"] for x in plan.LESSONS if x["layer"] == L["layer"]]
     k = same.index(L["id"])
     nav_prev = same[k - 1] if k > 0 else prev_id
     nav_next = same[k + 1] if k + 1 < len(same) else next_id
 
     def href(other):
+        """★ 跨层时必须多退一级：同层是 ../<课号>/，跨层是 ../../<层目录>/<课号>/。
+           早期版本一律写成 ../<课号>/，导致层边界两侧的 nav 全部指向不存在的路径。"""
         if other is None:
             return None
-        return f"../{other}/index.html"
+        other_layer = other.split("-")[0]
+        if other_layer == L["layer"]:
+            return f"../{other}/index.html"
+        return f"../../{plan.LAYER_DIR[other_layer]}/{other}/index.html"
 
     d = plan.lesson_dir(L)
     P = []

@@ -96,6 +96,55 @@ def lint_one(lid, d):
     return errs, warns
 
 
+def nav_closure(lessons):
+    """导航链闭环：若 A.next = B，则必须 B.prev = A（反之亦然）。
+
+    这是 skill 明确要求的不变量 —— 新增课插在中间时忘记改前后两课，
+    交互自检的「下一课」就会跳错，但单课渲染门禁发现不了。
+    """
+    href = {}
+    for lid, d in lessons:
+        h = os.path.join(d, "index.html")
+        if not os.path.isfile(h):
+            continue
+        t = C.read_text(h)
+        m = re.search(r"nav\s*:\s*\{(.*?)\n\s*\}\s*\)", t, re.S)
+        seg = m.group(1) if m else t
+        def grab(key):
+            mm = re.search(key + r"\s*:\s*(?:\{\s*href\s*:\s*'([^']+)'|(null))", seg)
+            if not mm:
+                return None
+            return None if mm.group(2) else mm.group(1)
+        href[lid] = (d, grab("prev"), grab("next"))
+
+    errs = []
+    for lid, (d, prev, nxt) in sorted(href.items()):
+        for kind, target in (("prev", prev), ("next", nxt)):
+            if not target:
+                continue
+            tgt_abs = os.path.normpath(os.path.join(d, target))
+            if not os.path.isfile(tgt_abs):
+                errs.append(f"{lid}: {kind} -> {target} 目标不存在")
+                continue
+            tgt_dir = os.path.dirname(tgt_abs)
+            other = None
+            for k, (od, _, _) in href.items():
+                if os.path.abspath(od) == os.path.abspath(tgt_dir):
+                    other = k
+            if other is None:
+                continue
+            _, oprev, onext = href[other]
+            want = "prev" if kind == "next" else "next"
+            back = onext if kind == "prev" else oprev
+            if back is None:
+                errs.append(f"{lid}.{kind} -> {other}，但 {other}.{want} 是 null（链未闭环）")
+            else:
+                back_abs = os.path.normpath(os.path.join(href[other][0], back))
+                if os.path.abspath(back_abs) != os.path.abspath(os.path.join(d, "index.html")):
+                    errs.append(f"{lid}.{kind} -> {other}，但 {other}.{want} -> {back}（未指回本课）")
+    return errs
+
+
 def main(argv):
     quiet = "--quiet" in argv
     only = argv[argv.index("--lesson") + 1] if "--lesson" in argv else None
@@ -111,6 +160,11 @@ def main(argv):
         R.warn("尚无任何课件目录 —— 空集上无错误可报")
         return 0
 
+    # 导航链闭环（全量一起查，因为要跨课比对）
+    nav_errs = nav_closure(lessons) if not only else []
+    for e in nav_errs:
+        R.bad("导航链: " + e)
+
     nbad = 0
     for lid, d in lessons:
         errs, warns = lint_one(lid, d)
@@ -121,10 +175,11 @@ def main(argv):
                 print("      " + e)
         elif not quiet and warns:
             print(f"  {R.Y}!{R.X} {lid}: " + "; ".join(warns))
-    if nbad:
-        R.bad(f"A4 语法/结构检查失败：{nbad}/{len(lessons)} 课有问题")
+    if nbad or nav_errs:
+        R.bad(f"A4 语法/结构检查失败：{nbad}/{len(lessons)} 课有问题"
+              + (f"，导航链 {len(nav_errs)} 处未闭环" if nav_errs else ""))
         return 1
-    R.ok(f"A4 通过：{len(lessons)} 课语法与结构检查无错误")
+    R.ok(f"A4 通过：{len(lessons)} 课语法与结构检查无错误，导航链闭环")
     return 0
 
 
